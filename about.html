@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en" class="no-js">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>About NXT Tours | UAE Tour Operator, Dubai</title>
+  <meta name="description" content="NXT Tours is a Dubai-based tour operator offering premium shared and private UAE experiences. Learn our story, values, and why 60,000+ travellers trust us." />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800&family=Inter:wght@400;500;600;700&family=Playfair+Display:ital,wght@1,600;1,700;1,800&display=swap" rel="stylesheet">
+
+  <link rel="icon" type="image/png" href="images/favicon.png" />
+
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+  <!-- ===== Navbar ===== -->
+  <nav class="navbar">
+    <div class="container">
+      <a href="index.html" class="logo" aria-label="NXT Tours — home">
+        <!-- Real client logo. Two copies that crossfade: white (over the crimson banner) and crimson (after scrolling, over the light glass bar) -->
+        <img class="logo-img logo-on-dark" src="images/nxt-logo-white.png" alt="NXT Tours — Experience Next-Gen Travel" width="731" height="224" />
+        <img class="logo-img logo-on-light" src="images/nxt-logo-dark.png" alt="" width="731" height="224" aria-hidden="true" />
+      </a>
+      <ul class="nav-links" id="nav-links">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="tours.html">Tours</a></li>
+        <li><a href="about.html" class="active">About</a></li>
+        <li><a href="contact.html">Contact</a></li>
+        <li><a href="https://wa.me/971586272827" class="nav-cta" target="_blank" rel="noopener">Book on WhatsApp</a></li>
+      </ul>
+      <button class="nav-toggle" aria-label="Toggle menu" aria-expanded="false" aria-controls="nav-links">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </nav>
+
+  <main>
+
+  <!-- ===== Page Hero (split banner, same family as the Tours banner) ===== -->
+  <header class="page-hero tours-hero about-hero">
+    <div class="ring-decor"></div>
+    <!-- "rich" particles = dots, rings, diamonds and little stars that twinkle (script.js builds them) -->
+    <div class="particles" data-particles="46" data-particles-theme="light" data-particles-style="rich" aria-hidden="true"></div>
+
+    <div class="container tours-hero-inner">
+      <div class="tours-hero-text">
+        <span class="eyebrow">About Us</span>
+        <h1>Travel the <span class="accent-word">UAE</span><br>Like a Local</h1>
+        <p>NXT Tours is a modern tour operator, born in Dubai. An experienced local team, carefully crafted itineraries and zero stress from booking to drop-off.</p>
+
+        <ul class="hero-facts">
+          <li><strong>10+</strong> years</li>
+          <li><strong>60,000+</strong> travellers</li>
+          <li><strong>4.9 ★</strong> rated</li>
+        </ul>
+
+        <div class="hero-actions">
+          <a href="#story" class="btn btn-accent">Our Story</a>
+          <a href="https://wa.me/971586272827" class="btn btn-outline" target="_blank" rel="noopener">Ask on WhatsApp</a>
+        </div>
+      </div>
+
+      <!-- Decorative collage: 3 floating photo "postcards", a spinning text badge and 2 chips -->
+      <div class="tours-hero-cards" aria-hidden="true">
+        <figure class="postcard pc-1"><img src="images/abu-dhabi-grand-mosque-aerial.jpg" alt="" width="1200" height="678" /><figcaption>Abu Dhabi</figcaption></figure>
+        <figure class="postcard pc-2"><img src="https://images.unsplash.com/photo-1672435326246-8420531c37ed?auto=format&fit=crop&w=700&q=72" alt="" width="700" height="467" /><figcaption>Hatta</figcaption></figure>
+        <figure class="postcard pc-3"><img src="https://images.unsplash.com/photo-1745750434535-5943ef2fd31a?auto=format&fit=crop&w=700&q=72" alt="" width="700" height="525" /><figcaption>Dubai</figcaption></figure>
+
+        <div class="spin-badge">
+          <svg viewBox="0 0 120 120">
+            <defs><path id="badge-circle" d="M60,60 m-45,0 a45,45 0 1,1 90,0 a45,45 0 1,1 -90,0" /></defs>
+            <text><textPath href="#badge-circle" textLength="280" lengthAdjust="spacing">BORN IN DUBAI • NEXT-GEN TRAVEL • </textPath></text>
+          </svg>
+          <img class="spin-badge-core" src="images/logo-mark.png" alt="" width="160" height="160" />
+        </div>
+
+        <div class="float-chip fc-1">Local expert guides</div>
+        <div class="float-chip fc-2">Free hotel pickup</div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ===== Destinations ticker (slides sideways forever) ===== -->
+  <div class="marquee" aria-hidden="true">
+    <div class="marquee-track">
+      <span>Dubai</span><i>✦</i><span>Abu Dhabi</span><i>✦</i><span>Hatta</span><i>✦</i><span>Khorfakkan</span><i>✦</i><span>Desert Safari</span><i>✦</i><span>Sheikh Zayed Mosque</span><i>✦</i><span>Dubai Marina</span><i>✦</i>
+      <span>Dubai</span><i>✦</i><span>Abu Dhabi</span><i>✦</i><span>Hatta</span><i>✦</i><span>Khorfakkan</span><i>✦</i><span>Desert Safari</span><i>✦</i><span>Sheikh Zayed Mosque</span><i>✦</i><span>Dubai Marina</span><i>✦</i>
+    </div>
+  </div>
+
+  <!-- ===== Story ===== -->
+  <section class="section has-bubbles" id="story">
+    <div class="bubbles" aria-hidden="true"><span class="bubble"></span><span class="bubble"></span><span class="bubble"></span></div>
+    <div class="particles" data-particles="34" data-particles-style="rich" aria-hidden="true"></div>
+    <div class="container">
+    <div class="about-grid story-grid">
+
+      <!-- Photo collage: 2 photos overlapping, a turning dashed ring and an "10+ years" badge -->
+      <div class="story-photos fade-up">
+        <div class="story-ring" aria-hidden="true"></div>
+        <figure class="story-photo sp-main">
+          <img src="images/abu-dhabi-baps-mandir.jpg" alt="BAPS Hindu Mandir in Abu Dhabi" width="1200" height="800" loading="lazy" />
+        </figure>
+        <figure class="story-photo sp-side">
+          <img src="https://images.unsplash.com/photo-1624062999726-083e5268525d?auto=format&fit=crop&w=800&q=72" alt="Desert safari 4x4 on the dunes" width="800" height="533" loading="lazy" />
+        </figure>
+        <div class="story-badge">
+          <strong data-count-to="10" data-suffix="+">10+</strong>
+          <span>Years in the UAE</span>
+        </div>
+      </div>
+
+      <div class="fade-up">
+        <span class="eyebrow">Our Story</span>
+        <h2 class="section-title" style="text-align:left">A Modern Tour Operator, <span class="accent-word">Born in Dubai</span></h2>
+        <p style="color:var(--text-muted);margin-bottom:1rem;">
+          NXT Tours is a Dubai-based tour operator offering premium shared and private experiences across the UAE.
+          We pair an experienced local team with carefully crafted itineraries to deliver tours that feel effortless, exciting, and genuinely memorable.
+        </p>
+        <p style="color:var(--text-muted);">
+          Whether it's the iconic skyline of Dubai, the cultural depth of Abu Dhabi, the mountain serenity of Hatta, or the hidden beauty of Khorfakkan —
+          our mission is simple: show you the UAE the way it should be seen.
+        </p>
+
+        <ul class="story-points">
+          <li><span aria-hidden="true">🌍</span> Shared &amp; private tours</li>
+          <li><span aria-hidden="true">🚐</span> Hotel &amp; metro pickup</li>
+          <li><span aria-hidden="true">💬</span> Book on WhatsApp in a minute</li>
+        </ul>
+
+        <a href="tours.html" class="btn btn-solid">See Our Tours</a>
+      </div>
+    </div>
+  </div>
+  </section>
+
+  <!-- ===== Stats Counter ===== -->
+  <section class="stats-strip">
+    <div class="ring-decor"></div>
+    <div class="particles" data-particles="22" data-particles-theme="light" data-particles-style="rich" aria-hidden="true"></div>
+    <div class="container stats-grid">
+      <div class="fade-up">
+        <div class="stat-number"><span data-count-to="60000" data-suffix="+">60,000+</span></div>
+        <div class="stat-label">Happy Travellers</div>
+      </div>
+      <div class="fade-up">
+        <div class="stat-number"><span data-count-to="10" data-suffix="+">10+</span></div>
+        <div class="stat-label">Years of Excellence</div>
+      </div>
+      <div class="fade-up">
+        <div class="stat-number"><span data-count-to="22000" data-suffix="+">22,000+</span></div>
+        <div class="stat-label">Tours Completed</div>
+      </div>
+      <div class="fade-up">
+        <div class="stat-number">4.9<span class="star" aria-hidden="true">★</span></div>
+        <div class="stat-label">Average Rating</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== Values (cards now have real photos) ===== -->
+  <section class="section section-muted has-bubbles">
+    <div class="bubbles alt" aria-hidden="true"><span class="bubble"></span><span class="bubble"></span><span class="bubble"></span></div>
+    <div class="particles" data-particles="30" data-particles-style="rich" aria-hidden="true"></div>
+    <div class="container">
+    <span class="eyebrow" style="display:block;text-align:center">Our Values</span>
+    <h2 class="section-title">What We <span class="accent-word">Stand For</span></h2>
+    <p class="section-subtitle">Three promises we keep on every single tour, big group or private family.</p>
+
+    <div class="values-grid stagger">
+      <article class="value-card card fade-up">
+        <div class="value-img">
+          <img src="https://images.unsplash.com/photo-1672324016837-4b803c38fc95?auto=format&fit=crop&w=800&q=72" alt="Louvre Abu Dhabi dome" width="800" height="533" loading="lazy" />
+          <span class="value-num" aria-hidden="true">01</span>
+        </div>
+        <span class="value-icon" aria-hidden="true">🏆</span>
+        <div class="value-body">
+          <h3>Excellence</h3>
+          <p>We deliver top quality experiences, every single time.</p>
+        </div>
+      </article>
+      <article class="value-card card fade-up">
+        <div class="value-img">
+          <img src="https://images.unsplash.com/photo-1512632578888-169bbbc64f33?auto=format&fit=crop&w=800&q=72" alt="Sheikh Zayed Grand Mosque at sunset" width="800" height="533" loading="lazy" />
+          <span class="value-num" aria-hidden="true">02</span>
+        </div>
+        <span class="value-icon" aria-hidden="true">🤝</span>
+        <div class="value-body">
+          <h3>Trust</h3>
+          <p>Transparent pricing, no hidden fees — ever.</p>
+        </div>
+      </article>
+      <article class="value-card card fade-up">
+        <div class="value-img">
+          <img src="https://images.unsplash.com/photo-1559830379-cbe0ad93161d?auto=format&fit=crop&w=800&q=72" alt="Hatta lake and mountains" width="800" height="533" loading="lazy" />
+          <span class="value-num" aria-hidden="true">03</span>
+        </div>
+        <span class="value-icon" aria-hidden="true">🧭</span>
+        <div class="value-body">
+          <h3>Discovery</h3>
+          <p>Unlocking the UAE's hidden gems, not just the checklist.</p>
+        </div>
+      </article>
+    </div>
+  </div>
+  </section>
+
+  <!-- ===== Why Book With Us ===== -->
+  <section class="section has-bubbles lines-bg">
+    <div class="bubbles" aria-hidden="true"><span class="bubble"></span><span class="bubble"></span><span class="bubble"></span></div>
+    <div class="particles" data-particles="30" data-particles-style="rich" aria-hidden="true"></div>
+    <div class="container">
+    <span class="eyebrow" style="display:block;text-align:center">Why Book With Us</span>
+    <h2 class="section-title">Every Detail, <span class="accent-word">Taken Care Of</span></h2>
+    <p class="section-subtitle">You just show up. We handle the rest.</p>
+
+    <div class="why-split">
+      <figure class="why-photo fade-up">
+        <img src="https://images.unsplash.com/photo-1611577810610-642f8ac05c32?auto=format&fit=crop&w=900&q=72" alt="Dubai Marina skyline" width="900" height="1200" loading="lazy" />
+        <figcaption><strong>4.9 ★</strong> average rating<br><small>from 60,000+ travellers</small></figcaption>
+      </figure>
+
+      <div class="why-tiles stagger">
+        <div class="why-card card fade-up">
+          <span class="why-number" aria-hidden="true">01</span>
+          <div class="why-icon" aria-hidden="true">💰</div>
+          <h3>Fair Prices</h3>
+          <p>Affordable shared and private options.</p>
+        </div>
+        <div class="why-card card fade-up">
+          <span class="why-number" aria-hidden="true">02</span>
+          <div class="why-icon" aria-hidden="true">🚐</div>
+          <h3>Free Pickup</h3>
+          <p>Hotel and metro pickup included.</p>
+        </div>
+        <div class="why-card card fade-up">
+          <span class="why-number" aria-hidden="true">03</span>
+          <div class="why-icon" aria-hidden="true">🎓</div>
+          <h3>Local Guides</h3>
+          <p>Knowledgeable English-speaking guides.</p>
+        </div>
+        <div class="why-card card fade-up">
+          <span class="why-number" aria-hidden="true">04</span>
+          <div class="why-icon" aria-hidden="true">👨‍👩‍👧</div>
+          <h3>For Everyone</h3>
+          <p>Family-friendly, suitable for all ages.</p>
+        </div>
+        <div class="why-card card fade-up">
+          <span class="why-number" aria-hidden="true">05</span>
+          <div class="why-icon" aria-hidden="true">🚙</div>
+          <h3>Comfy Rides</h3>
+          <p>Modern, comfortable vehicles.</p>
+        </div>
+        <div class="why-card card fade-up">
+          <span class="why-number" aria-hidden="true">06</span>
+          <div class="why-icon" aria-hidden="true">💬</div>
+          <h3>Instant Support</h3>
+          <p>Easy WhatsApp booking and instant support.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  </section>
+
+  <!-- ===== Location ===== -->
+  <section class="section section-muted has-bubbles">
+    <div class="bubbles alt" aria-hidden="true"><span class="bubble"></span><span class="bubble"></span><span class="bubble"></span></div>
+    <div class="particles" data-particles="26" data-particles-style="rich" aria-hidden="true"></div>
+    <div class="container">
+    <span class="eyebrow" style="display:block;text-align:center">Find Us</span>
+    <h2 class="section-title">Our <span class="accent-word">Office</span></h2>
+    <p class="section-subtitle">Come say hello, or just message us on WhatsApp.</p>
+
+    <div class="loc-grid">
+      <div class="card loc-card fade-up">
+        <div class="loc-photo">
+          <img src="https://images.unsplash.com/photo-1745750434535-5943ef2fd31a?auto=format&fit=crop&w=800&q=72" alt="Dubai skyline" width="800" height="600" loading="lazy" />
+          <span class="loc-pin" aria-hidden="true">📍</span>
+        </div>
+        <div class="loc-body">
+          <div class="contact-info-item">
+            <div class="icon" aria-hidden="true">📍</div>
+            <div>
+              <h3>Address</h3>
+              <p>Sadiq Al Kazim Building (Old Labor Office, 208-5), Abu Hail, Deira, Dubai, United Arab Emirates</p>
+            </div>
+          </div>
+          <div class="contact-info-item">
+            <div class="icon" aria-hidden="true">📱</div>
+            <div>
+              <h3>WhatsApp / Call</h3>
+              <p>+971 58 627 2827</p>
+            </div>
+          </div>
+          <div class="contact-info-item">
+            <div class="icon" aria-hidden="true">📷</div>
+            <div>
+              <h3>Instagram</h3>
+              <p>@nxt_tours</p>
+            </div>
+          </div>
+          <a href="https://wa.me/971586272827" class="btn btn-solid" target="_blank" rel="noopener" style="width:100%;text-align:center;">Chat With Us on WhatsApp</a>
+        </div>
+      </div>
+
+      <div class="map-wrap fade-up">
+        <iframe
+          src="https://www.google.com/maps?q=Sadiq+Al+Kazim+Building+Abu+Hail+Deira+Dubai&output=embed"
+          loading="lazy"
+          referrerpolicy="no-referrer-when-downgrade"
+          title="NXT Tours office location map">
+        </iframe>
+      </div>
+    </div>
+  </div>
+  </section>
+
+  <!-- ===== CTA Strip ===== -->
+  <section class="container" style="padding-top:4rem;padding-bottom:5rem;">
+    <div class="cta-strip fade-up">
+      <div class="ring-decor"></div>
+      <div class="particles" data-particles="18" data-particles-theme="light" data-particles-style="rich" aria-hidden="true"></div>
+      <h2>Ready to Explore the <span class="accent-word">UAE</span>?</h2>
+      <p>Chat with us on WhatsApp and let's plan your trip.</p>
+      <a href="https://wa.me/971586272827" class="btn btn-accent" target="_blank" rel="noopener">Chat With Us on WhatsApp</a>
+    </div>
+  </section>
+
+  </main>
+
+  <!-- ===== Footer ===== -->
+  <footer>
+    <div class="container">
+      <div class="footer-grid">
+        <div>
+          <img class="footer-logo" src="images/nxt-logo-white.png" alt="NXT Tours" width="731" height="224" loading="lazy" />
+          <p>Dubai and UAE sightseeing tours, desert safaris, and private day trips.</p>
+        </div>
+        <div>
+          <h3>Quick Links</h3>
+          <a href="index.html">Home</a>
+          <a href="tours.html">Tours</a>
+          <a href="about.html">About</a>
+          <a href="contact.html">Contact</a>
+        </div>
+        <div>
+          <h3>Contact</h3>
+          <p>Sadiq Al Kazim Building (Old Labor Office, 208-5), Abu Hail, Deira, Dubai, UAE</p>
+          <a href="tel:+971586272827">+971 58 627 2827</a>
+          <a href="https://instagram.com/nxt_tours" target="_blank" rel="noopener">@nxt_tours on Instagram</a>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        &copy; <span id="year"></span> NXT Tours. All rights reserved.
+      </div>
+    </div>
+  </footer>
+
+  <a href="https://wa.me/971586272827" class="whatsapp-float" target="_blank" rel="noopener" aria-label="Chat on WhatsApp">💬</a>
+
+  <script src="js/script.js"></script>
+</body>
+</html>

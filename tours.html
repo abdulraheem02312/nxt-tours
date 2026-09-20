@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en" class="no-js">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>All UAE Tours | NXT Tours Dubai</title>
+  <meta name="description" content="Browse all NXT Tours experiences — Abu Dhabi City Tour, Dubai City Tour, Desert Safari, Hatta, and Khorfakkan. Sharing and private options available." />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800&family=Inter:wght@400;500;600;700&family=Playfair+Display:ital,wght@1,600;1,700;1,800&display=swap" rel="stylesheet">
+
+  <link rel="icon" type="image/png" href="images/favicon.png" />
+
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+  <!-- ===== Navbar ===== -->
+  <nav class="navbar">
+    <div class="container">
+      <a href="index.html" class="logo" aria-label="NXT Tours — home">
+        <!-- Real client logo. Two copies that crossfade: white (over the crimson banner) and crimson (after scrolling, over the light glass bar) -->
+        <img class="logo-img logo-on-dark" src="images/nxt-logo-white.png" alt="NXT Tours — Experience Next-Gen Travel" width="731" height="224" />
+        <img class="logo-img logo-on-light" src="images/nxt-logo-dark.png" alt="" width="731" height="224" aria-hidden="true" />
+      </a>
+      <ul class="nav-links" id="nav-links">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="tours.html" class="active">Tours</a></li>
+        <li><a href="about.html">About</a></li>
+        <li><a href="contact.html">Contact</a></li>
+        <li><a href="https://wa.me/971586272827" class="nav-cta" target="_blank" rel="noopener">Book on WhatsApp</a></li>
+      </ul>
+      <button class="nav-toggle" aria-label="Toggle menu" aria-expanded="false" aria-controls="nav-links">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </nav>
+
+  <main>
+
+  <!-- ===== Page Hero ===== -->
+  <header class="page-hero tours-hero">
+    <div class="ring-decor"></div>
+    <!-- gold/white floating dots (script.js builds them) -->
+    <div class="particles" data-particles="36" data-particles-theme="light" aria-hidden="true"></div>
+
+    <div class="container tours-hero-inner">
+      <div class="tours-hero-text">
+        <span class="eyebrow">All Tours</span>
+        <h1>Choose Your Perfect <span class="accent-word">UAE Experience</span></h1>
+        <p>From budget-friendly shared days out to fully private experiences, every NXT tour is run by experienced local guides.</p>
+
+        <ul class="hero-facts">
+          <li><strong data-count-to="5">5</strong> tours</li>
+          <li>from <strong>AED 59</strong></li>
+          <li><strong>4.9 ★</strong> rated</li>
+          <li>Pickup <strong>included</strong></li>
+        </ul>
+
+        <div class="hero-actions">
+          <a href="#tours" class="btn btn-accent">Browse Tours</a>
+          <a href="https://wa.me/971586272827" class="btn btn-outline" target="_blank" rel="noopener">Ask on WhatsApp</a>
+        </div>
+      </div>
+
+      <!-- Decorative collage: 3 floating photo "postcards" + a plane flying along a dashed route -->
+      <div class="tours-hero-cards" aria-hidden="true">
+        <svg class="flight" viewBox="0 0 600 420" preserveAspectRatio="xMidYMid meet">
+          <path d="M10 380 C 130 130, 390 20, 590 100" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="2" stroke-dasharray="7 9" stroke-linecap="round" />
+          <g>
+            <path d="M-13 -8 L15 0 L-13 8 L-7 0 Z" fill="#ffd27a" />
+            <animateMotion dur="9s" repeatCount="indefinite" rotate="auto" path="M10 380 C 130 130, 390 20, 590 100" />
+          </g>
+        </svg>
+
+        <figure class="postcard pc-1"><img src="images/abu-dhabi-grand-mosque-aerial.jpg" alt="" width="1200" height="678" /><figcaption>Abu Dhabi</figcaption></figure>
+        <figure class="postcard pc-2"><img src="https://images.pexels.com/photos/936250/pexels-photo-936250.jpeg?auto=compress&cs=tinysrgb&w=800" alt="" width="800" height="533" /><figcaption>Desert</figcaption></figure>
+        <figure class="postcard pc-3"><img src="https://images.unsplash.com/photo-1745750434535-5943ef2fd31a?auto=format&fit=crop&w=700&q=72" alt="" width="700" height="525" /><figcaption>Dubai</figcaption></figure>
+
+        <div class="float-chip fc-1">Free hotel pickup</div>
+        <div class="float-chip fc-2">Book in 1 minute</div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ===== Full Tours Grid ===== -->
+  <section class="section has-bubbles" id="tours">
+    <div class="bubbles" aria-hidden="true"><span class="bubble"></span><span class="bubble"></span><span class="bubble"></span></div>
+    <!-- tiny, very faint floating dots (script.js builds them) -->
+    <div class="particles" data-particles="30" aria-hidden="true"></div>
+    <div class="container">
+    <span class="eyebrow" style="display:block;text-align:center">Find Your Trip</span>
+    <h2 class="section-title">Every UAE <span class="accent-word">Experience</span></h2>
+    <p class="section-subtitle">Pick a category, or browse them all. Book directly on WhatsApp, we respond within a few hours.</p>
+
+    <!-- Working filter: script.js shows/hides the cards below using their data-tags -->
+    <div class="filter-bar" data-filter-bar data-target="tours-grid" data-status="filter-status" role="group" aria-label="Filter tours">
+      <button type="button" class="chip is-active" data-filter="all" aria-pressed="true">All Tours <span>5</span></button>
+      <button type="button" class="chip" data-filter="city" aria-pressed="false">City Tours <span>2</span></button>
+      <button type="button" class="chip" data-filter="nature" aria-pressed="false">Mountains &amp; Coast <span>2</span></button>
+      <button type="button" class="chip" data-filter="adventure" aria-pressed="false">Desert Adventure <span>1</span></button>
+      <button type="button" class="chip" data-filter="private" aria-pressed="false">Private Only <span>1</span></button>
+    </div>
+    <p class="filter-status" id="filter-status" aria-live="polite">Showing all 5 tours</p>
+
+    <div class="tours-grid stagger" id="tours-grid">
+
+      <div class="tour-card card fade-up" data-tags="city">
+        <div class="tour-img-wrap">
+          <span class="tour-type-badge">Sharing & Private</span>
+          <img src="images/abu-dhabi-grand-mosque-aerial.jpg" width="1200" height="678" alt="Aerial view of the Sheikh Zayed Grand Mosque in Abu Dhabi" loading="lazy" decoding="async" />
+        </div>
+        <div class="tour-body">
+          <h3>Abu Dhabi City Tour</h3>
+          <p>Sheikh Zayed Mosque, Emirates Palace, Ferrari World & more — the UAE's most complete day trip.</p>
+          <ul class="spotlight-list" style="grid-template-columns:1fr;font-size:0.85rem;margin-bottom:1rem;">
+            <li>Sheikh Zayed Grand Mosque</li>
+            <li>Emirates Palace & Etihad Towers</li>
+            <li>Ferrari World Yas Island</li>
+          </ul>
+          <div class="tour-footer">
+            <div class="tour-price">AED 79.99 <del class="was">AED 120</del></div>
+            <a href="https://wa.me/971586272827" class="btn btn-solid" target="_blank" rel="noopener">Book Now</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="tour-card card fade-up" data-tags="nature">
+        <div class="tour-img-wrap">
+          <span class="tour-type-badge">Sharing & Private</span>
+          <img src="https://images.unsplash.com/photo-1672435326246-8420531c37ed?auto=format&fit=crop&w=900&q=72" width="900" height="600" alt="Hatta lake surrounded by the Hajar mountains" loading="lazy" decoding="async" />
+        </div>
+        <div class="tour-body">
+          <h3>Hatta City Tour</h3>
+          <p>Turquoise lakes, mountain trails, and the Hajar peaks — a refreshing escape from the city.</p>
+          <ul class="spotlight-list" style="grid-template-columns:1fr;font-size:0.85rem;margin-bottom:1rem;">
+            <li>Hatta Dam turquoise lake</li>
+            <li>Hajar Mountain scenic drive</li>
+            <li>Hatta Heritage Village stop</li>
+          </ul>
+          <div class="tour-footer">
+            <div class="tour-price">AED 69.99 <del class="was">AED 100</del></div>
+            <a href="https://wa.me/971586272827" class="btn btn-solid" target="_blank" rel="noopener">Book Now</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="tour-card card fade-up" data-tags="city">
+        <div class="tour-img-wrap">
+          <span class="tour-type-badge">Sharing & Private</span>
+          <img src="https://images.unsplash.com/photo-1745750434535-5943ef2fd31a?auto=format&fit=crop&w=900&q=72" width="900" height="675" alt="Dubai skyline with the Burj Khalifa" loading="lazy" decoding="async" />
+        </div>
+        <div class="tour-body">
+          <h3>Dubai City Tour</h3>
+          <p>Burj Khalifa, Palm Jumeirah, Old Dubai and the modern skyline, all in one half-day tour.</p>
+          <ul class="spotlight-list" style="grid-template-columns:1fr;font-size:0.85rem;margin-bottom:1rem;">
+            <li>Burj Khalifa photo stop</li>
+            <li>Palm Jumeirah drive-by</li>
+            <li>Old Dubai & Dubai Creek</li>
+          </ul>
+          <div class="tour-footer">
+            <div class="tour-price">AED 59 <del class="was">AED 99</del></div>
+            <a href="https://wa.me/971586272827" class="btn btn-solid" target="_blank" rel="noopener">Book Now</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="tour-card card fade-up" data-tags="adventure">
+        <div class="tour-img-wrap">
+          <span class="tour-type-badge">Sharing & Private</span>
+          <img src="https://images.unsplash.com/photo-1624062999726-083e5268525d?auto=format&fit=crop&w=1600&q=80" width="1600" height="1067" alt="A white Land Cruiser dune bashing down a sand dune in the Dubai desert" loading="lazy" decoding="async" />
+        </div>
+        <div class="tour-body">
+          <h3>Desert Safari</h3>
+          <p>Dune bashing, camel rides, BBQ dinner and live entertainment under the stars.</p>
+          <ul class="spotlight-list" style="grid-template-columns:1fr;font-size:0.85rem;margin-bottom:1rem;">
+            <li>Dune bashing in 4x4 vehicles</li>
+            <li>Camel riding & sandboarding</li>
+            <li>BBQ dinner with live shows</li>
+          </ul>
+          <div class="tour-footer">
+            <div class="tour-price">AED 99 <del class="was">AED 180</del></div>
+            <a href="https://wa.me/971586272827" class="btn btn-solid" target="_blank" rel="noopener">Book Now</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Khorfakkan: horizontal card that fills the empty space to the right of Desert Safari -->
+      <div class="tour-card tour-wide tour-span card fade-up" data-tags="nature private">
+        <div class="tour-img-wrap">
+          <span class="tour-type-badge">Private Only</span>
+          <img src="https://images.pexels.com/photos/39583225/pexels-photo-39583225.jpeg?auto=compress&cs=tinysrgb&w=1200" width="1200" height="800" alt="Khorfakkan waterfront buildings and mosque on the deep blue sea, with the Hajar mountains behind" style="object-position: 22% 50%" loading="lazy" decoding="async" />
+        </div>
+        <div class="tour-body">
+          <h3>Khorfakkan City Tour</h3>
+          <p>Hidden beaches, scenic waterfalls, and the East Coast's best-kept secret — a full private day out.</p>
+          <ul class="spotlight-list" style="grid-template-columns:1fr;font-size:0.85rem;margin-bottom:1rem;">
+            <li>East Coast hidden beaches</li>
+            <li>Scenic mountain waterfalls</li>
+            <li>Private full-day experience</li>
+          </ul>
+          <ul class="tour-chips" aria-label="What is included">
+            <li>Private only</li>
+            <li>Full-day</li>
+            <li>Hotel pickup & drop-off</li>
+            <li>English-speaking guide</li>
+          </ul>
+          <div class="tour-footer">
+            <div class="tour-price">AED 699 <del class="was">AED 900</del></div>
+            <a href="https://wa.me/971586272827" class="btn btn-solid" target="_blank" rel="noopener">Book Now</a>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+  </section>
+
+  <!-- ===== CTA Strip ===== -->
+  <section class="container" style="padding-bottom:5rem;">
+    <div class="cta-strip fade-up">
+      <div class="ring-decor"></div>
+      <h2>Can't Decide? <span class="accent-word">Ask Us.</span></h2>
+      <p>Tell us your travel dates and interests — we'll recommend the best package for you.</p>
+      <a href="https://wa.me/971586272827" class="btn btn-accent" target="_blank" rel="noopener">Chat on WhatsApp</a>
+    </div>
+  </section>
+
+  </main>
+
+  <!-- ===== Footer ===== -->
+  <footer>
+    <div class="container">
+      <div class="footer-grid">
+        <div>
+          <img class="footer-logo" src="images/nxt-logo-white.png" alt="NXT Tours" width="731" height="224" loading="lazy" />
+          <p>Dubai and UAE sightseeing tours, desert safaris, and private day trips.</p>
+        </div>
+        <div>
+          <h3>Quick Links</h3>
+          <a href="index.html">Home</a>
+          <a href="tours.html">Tours</a>
+          <a href="about.html">About</a>
+          <a href="contact.html">Contact</a>
+        </div>
+        <div>
+          <h3>Contact</h3>
+          <p>Sadiq Al Kazim Building (Old Labor Office, 208-5), Abu Hail, Deira, Dubai, UAE</p>
+          <a href="tel:+971586272827">+971 58 627 2827</a>
+          <a href="https://instagram.com/nxt_tours" target="_blank" rel="noopener">@nxt_tours on Instagram</a>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        &copy; <span id="year"></span> NXT Tours. All rights reserved.
+      </div>
+    </div>
+  </footer>
+
+  <a href="https://wa.me/971586272827" class="whatsapp-float" target="_blank" rel="noopener" aria-label="Chat on WhatsApp">💬</a>
+
+  <script src="js/script.js"></script>
+</body>
+</html>

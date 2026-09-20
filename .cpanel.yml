@@ -1,0 +1,10 @@
+---
+# cPanel "Git Version Control" reads this file when you press "Deploy HEAD Commit".
+# It copies the website files from the repository into public_html (the folder that
+# nxttours.com shows). Only the site files are copied, so this file and the .git
+# folder never end up on the public website.
+deployment:
+  tasks:
+    - export DEPLOYPATH=/home1/nxttours/public_html/
+    - /bin/cp -R css js images $DEPLOYPATH
+    - /bin/cp index.html tours.html about.html contact.html $DEPLOYPATH
