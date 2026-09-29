@@ -7,4 +7,4 @@ deployment:
   tasks:
     - export DEPLOYPATH=/home1/nxttours/public_html/
     - /bin/cp -R css js images $DEPLOYPATH
-    - /bin/cp index.html tours.html about.html contact.html $DEPLOYPATH
+    - /bin/cp index.html tours.html about.html contact.html tour.html $DEPLOYPATH

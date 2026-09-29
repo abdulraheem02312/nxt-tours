@@ -1,0 +1,67 @@
+<!-- A small UAE skyline that repeats sideways (used faintly behind the pink call-to-action cards).
+     Left edge and right edge both stand on the ground line, so the tiles join without a gap.
+     Landmarks, left to right: low houses, a mosque with domes + minarets, Burj Khalifa,
+     a twisted tower, Burj Al Arab (the sail), Dubai Frame. Everything is plain white;
+     the CSS makes it faint. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 120" width="800" height="120" fill="#ffffff">
+
+  <!-- back row: paler buildings standing behind the main ones -->
+  <g fill-opacity="0.5">
+    <rect x="20" y="60" width="26" height="60" />
+    <rect x="52" y="46" width="20" height="74" />
+    <rect x="200" y="40" width="22" height="80" />
+    <rect x="322" y="52" width="26" height="68" />
+    <rect x="452" y="48" width="24" height="72" />
+    <rect x="536" y="56" width="30" height="64" />
+    <rect x="626" y="44" width="22" height="76" />
+    <rect x="712" y="58" width="30" height="62" />
+  </g>
+
+  <!-- low houses -->
+  <rect x="0" y="86" width="34" height="34" />
+  <rect x="38" y="72" width="24" height="48" />
+  <rect x="66" y="92" width="30" height="28" />
+
+  <!-- mosque: main dome, two small domes, two minarets -->
+  <rect x="104" y="92" width="82" height="28" />
+  <path d="M125 92a20 20 0 0 1 40 0z" />
+  <path d="M105 92a9 9 0 0 1 18 0z" />
+  <path d="M167 92a9 9 0 0 1 18 0z" />
+  <rect x="144" y="62" width="2" height="10" />
+  <rect x="98" y="56" width="5" height="64" />
+  <rect x="187" y="56" width="5" height="64" />
+  <path d="M97 56l3.5-8 3.5 8z" />
+  <path d="M186 56l3.5-8 3.5 8z" />
+
+  <!-- Burj Khalifa: a tall tower that gets thinner in steps -->
+  <path d="M244 120V84h5V66h4V48h4V28h2V4h2v24h2v20h4v18h4v18h5v36z" />
+
+  <!-- shorter towers -->
+  <rect x="286" y="72" width="22" height="48" />
+  <rect x="312" y="96" width="30" height="24" />
+
+  <!-- twisted tower -->
+  <path d="M350 120V48l14-8v80z" />
+  <rect x="368" y="80" width="26" height="40" />
+
+  <!-- Burj Al Arab: the sail -->
+  <path d="M410 120V26C444 46 458 86 454 120z" />
+  <rect x="404" y="112" width="56" height="8" />
+
+  <!-- more buildings -->
+  <rect x="470" y="84" width="26" height="36" />
+  <rect x="500" y="64" width="20" height="56" />
+  <rect x="524" y="92" width="26" height="28" />
+
+  <!-- Dubai Frame: two legs and a bar on top -->
+  <rect x="566" y="46" width="8" height="74" />
+  <rect x="598" y="46" width="8" height="74" />
+  <rect x="566" y="46" width="40" height="8" />
+
+  <rect x="614" y="78" width="24" height="42" />
+  <rect x="642" y="60" width="18" height="60" />
+  <rect x="664" y="90" width="28" height="30" />
+  <rect x="696" y="70" width="22" height="50" />
+  <rect x="722" y="88" width="34" height="32" />
+  <rect x="760" y="98" width="40" height="22" />
+</svg>
