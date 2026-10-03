@@ -15,13 +15,17 @@ const DARK_SECTIONS = ".hero, .page-hero, .stats-strip, .cta-strip, .spotlight-d
 let navTicking = false;
 
 const updateNavbar = () => {
-  navbar.classList.toggle("scrolled", window.scrollY > 40);
-
   // the element under the middle of the bar (skipping the bar itself)
   const under = document
     .elementsFromPoint(window.innerWidth / 2, navbar.offsetHeight / 2)
     .find((el) => !navbar.contains(el));
-  navbar.classList.toggle("on-dark", Boolean(under && under.closest(DARK_SECTIONS)));
+  const isDark = Boolean(under && under.closest(DARK_SECTIONS));
+
+  // Normally the bar stays fully transparent (white text) until you scroll 40px, because every
+  // page opens on a dark hero photo/banner. A page with no dark section at the very top (like
+  // tour.html's plain white header) needs the readable light-glass look from the start instead.
+  navbar.classList.toggle("scrolled", window.scrollY > 40 || !isDark);
+  navbar.classList.toggle("on-dark", isDark);
 
   navTicking = false;
 };
@@ -617,8 +621,17 @@ const TOURS = {
   "abu-dhabi": {
     name: "Abu Dhabi", accent: "City Tour", type: "Sharing & Private",
     price: 79.99, was: 120, duration: "Day trip",
-    intro: "Sheikh Zayed Mosque, Emirates Palace, Ferrari World & more: the UAE's most complete day trip.",
+    heroTitle: { prefix: "Best of Abu Dhabi:", accent: "Full-Day City Tour from Dubai" },
+    // Private tour: priced per vehicle, not per person (same rates as the partner company's
+    // own private tour, per Abdul Raheem 2026-09-29)
+    privateTiers: [
+      { seats: 7, price: 599 },
+      { seats: 14, price: 999 },
+    ],
+    intro: "Abu Dhabi in a single day: start at the gleaming white domes of the Sheikh Zayed Grand Mosque, then continue along the waterfront to Emirates Palace and Etihad Towers. Feel the thrill of Ferrari World Yas Island, and pass Qasr Al Watan and the Abu Dhabi Corniche along the way. It's the UAE's most complete day trip, loved by families, couples, and solo travellers alike.",
     points: ["Sheikh Zayed Grand Mosque", "Emirates Palace & Etihad Towers", "Ferrari World Yas Island"],
+    // Shown on the Private Tour button: a real stop from this tour, as an example of what can be customized
+    privatePlace: "the city",
     photos: [
       { src: "images/abu-dhabi-grand-mosque-aerial.jpg", alt: "Sheikh Zayed Grand Mosque seen from above", cap: "Sheikh Zayed Grand Mosque" },
       { src: tourUnsplash("1512632578888-169bbbc64f33", 1200), alt: "Sheikh Zayed Grand Mosque at sunset", cap: "The mosque at sunset" },
@@ -648,8 +661,10 @@ const TOURS = {
   "hatta": {
     name: "Hatta", accent: "City Tour", type: "Sharing & Private",
     price: 69.99, was: 100,
-    intro: "Turquoise lakes, mountain trails, and the Hajar peaks: a refreshing escape from the city.",
+    heroTitle: { prefix: "Best of Hatta:", accent: "Mountain & Lake Day Trip from Dubai" },
+    intro: "Escape the city for a day in the Hajar Mountains. Cruise along the turquoise waters of Hatta Dam, wind through scenic mountain roads with views over lakes and valleys, and stop at Hatta Heritage Village to see traditional Emirati life up close. With fresh mountain air and a slower pace, it's the perfect break from Dubai's skyline.",
     points: ["Hatta Dam lake", "Hajar Mountain scenic drive", "Hatta Heritage Village stop"],
+    privatePlace: "Hatta",
     photos: [
       { src: tourUnsplash("1672435326246-8420531c37ed", 1200), alt: "Hatta lake surrounded by the Hajar mountains", cap: "Hatta lake" },
       { src: tourUnsplash("1559830379-cbe0ad93161d", 1200), alt: "Turquoise water and rocky Hajar mountains at Hatta", cap: "The Hajar mountains" }
@@ -670,8 +685,10 @@ const TOURS = {
   "dubai": {
     name: "Dubai", accent: "City Tour", type: "Sharing & Private",
     price: 59, was: 99, duration: "Half-day",
-    intro: "Burj Khalifa, Palm Jumeirah, Old Dubai and the modern skyline, all in one half-day tour.",
+    heroTitle: { prefix: "Best of Dubai:", accent: "Half-Day Icons & Skyline Tour" },
+    intro: "See Dubai's biggest icons in just half a day. Snap photos at the base of the Burj Khalifa, the world's tallest building, then drive along the iconic Palm Jumeirah. Wind through the narrow lanes of Old Dubai and Dubai Creek to see the city's traditional side, before heading back through the ultra-modern skyline. A fast-paced first look at everything Dubai is known for.",
     points: ["Burj Khalifa photo stop", "Palm Jumeirah drive-by", "Old Dubai & Dubai Creek"],
+    privatePlace: "the city",
     photos: [
       { src: tourUnsplash("1745750434535-5943ef2fd31a", 1200), alt: "Dubai skyline with the Burj Khalifa", cap: "Dubai skyline & Burj Khalifa" },
       { src: tourUnsplash("1611577810610-642f8ac05c32", 1200), alt: "Modern Dubai skyline at sunset", cap: "The modern skyline" }
@@ -689,8 +706,10 @@ const TOURS = {
   "desert-safari": {
     name: "Desert", accent: "Safari", type: "Sharing & Private",
     price: 99, was: 180,
-    intro: "Dune bashing, camel rides, BBQ dinner and live entertainment under the stars.",
+    heroTitle: { prefix: "Arabian Desert Safari:", accent: "Dune Bashing & BBQ Evening from Dubai" },
+    intro: "Head into the golden dunes of the Arabian desert for an action-packed evening. Feel the adrenaline of dune bashing in a 4x4, try sand boarding down the dunes, then take a calm camel ride as the sun sets over the desert. Wind down with a BBQ buffet dinner under the stars, complete with fire shows, belly dance, tanoura, and henna painting.",
     points: ["Dune bashing in 4x4 vehicles", "Camel rides", "BBQ dinner with live shows"],
+    privatePlace: "the desert",
     photos: [
       { src: tourUnsplash("1624062999726-083e5268525d", 1400), alt: "A white Land Cruiser dune bashing in the desert", cap: "Dune bashing" },
       { src: tourPexels("2417260", 1400), alt: "A 4x4 kicking up sand on orange dunes at sunset", cap: "Desert sunset" },
@@ -715,7 +734,8 @@ const TOURS = {
   "khorfakkan": {
     name: "Khorfakkan", accent: "City Tour", type: "Private Only",
     price: 699, was: 900, duration: "Full-day",
-    intro: "Hidden beaches, scenic waterfalls, and the East Coast's best-kept secret: a full private day out.",
+    heroTitle: { prefix: "Best of Khorfakkan:", accent: "Private Full-Day East Coast Tour from Dubai" },
+    intro: "Cross to the UAE's East Coast for a day away from the crowds. Relax on hidden beaches along the Khorfakkan coastline, discover scenic mountain waterfalls tucked into the Hajar range, and enjoy fresh sea air far from the city. As a private, full-day experience, the whole trip moves at your own pace.",
     points: ["East Coast hidden beaches", "Scenic mountain waterfalls", "Private full-day experience"],
     photos: [
       { src: tourPexels("39583225", 1200), alt: "Khorfakkan waterfront and mosque on the deep blue sea, with mountains behind", cap: "Khorfakkan waterfront", pos: "22% 50%" },
@@ -1352,6 +1372,7 @@ if (tourPage) {
 
     q("[data-tour-crumb]").textContent = tour.name + " " + tour.accent;
     q("[data-tour-badge]").textContent = tour.type;
+    q("[data-tour-meta-place]").textContent = tour.name;
     if (tour.duration) {
       const durEl = q("[data-tour-meta-duration]");
       durEl.hidden = false;
@@ -1361,10 +1382,10 @@ if (tourPage) {
     }
 
     const titleEl = q("[data-tour-title]");
-    titleEl.textContent = tour.name + " ";
+    titleEl.textContent = tour.heroTitle.prefix + " ";
     const accentEl = document.createElement("span");
     accentEl.className = "accent-word";
-    accentEl.textContent = tour.accent;
+    accentEl.textContent = tour.heroTitle.accent;
     titleEl.appendChild(accentEl);
 
     // ---- Sharing / Private switch ----
@@ -1381,16 +1402,27 @@ if (tourPage) {
 
     const currentPrice = () => {
       if (mode === "sharing" || privateOnly) return { price: tour.price, was: tour.was };
+      if (tour.privateTiers) return { price: tour.privateTiers[0].price, tiers: tour.privateTiers };
       return tour.privatePrice ? { price: tour.privatePrice, was: tour.privateWas } : null;
     };
 
     // Text used in the WhatsApp message (updated below)
     const modeLabel = () => (privateOnly ? "" : mode === "private" ? " (Private tour)" : " (Sharing tour)");
 
+    const tiersEl = q("[data-tour-tiers]");
+    const priceFromEl = q("[data-tour-price-from]");
+
     const showPrice = () => {
       const p = currentPrice();
       priceEl.classList.toggle("is-text", !p);
-      if (p) {
+      if (tiersEl) tiersEl.hidden = !(p && p.tiers);
+      if (priceFromEl) priceFromEl.hidden = !(p && p.tiers);
+      if (p && p.tiers) {
+        priceEl.textContent = money(p.price);
+        wasEl.style.display = "none";
+        saveEl.style.display = "none";
+        tiersEl.textContent = p.tiers.map((t) => t.seats + "-seater: " + money(t.price)).join(" · ");
+      } else if (p) {
         priceEl.textContent = money(p.price);
         wasEl.style.display = p.was ? "" : "none";
         saveEl.style.display = p.was ? "" : "none";
@@ -1405,9 +1437,19 @@ if (tourPage) {
       }
     };
 
+    // One small hint line under the buttons, swapped for whichever mode is selected.
+    // Private tours run a full 24 hours, private to just your own group.
+    const modeNoteEl = q("[data-tour-mode-note]");
+    const modeNotes = {
+      sharing: "Join other travellers, lower price.",
+      private: "Just your group, explore " + (tour.privatePlace || tour.name) + " at your own pace in 24 hours.",
+    };
+    const showModeNote = () => { if (modeNoteEl) modeNoteEl.textContent = modeNotes[mode]; };
+
     if (privateOnly) {
       modeBar.hidden = true;
     } else {
+      showModeNote();
       modeBtns.forEach((btn) => {
         btn.addEventListener("click", () => {
           mode = btn.dataset.mode;
@@ -1416,6 +1458,7 @@ if (tourPage) {
             b.setAttribute("aria-pressed", b === btn ? "true" : "false");
           });
           showPrice();
+          showModeNote();
           updateWhatsApp();
         });
       });
@@ -1443,11 +1486,68 @@ if (tourPage) {
       pointsEl.appendChild(li);
     });
 
-    // ---- Gallery: same prev/next + thumbnail behaviour as the old popup ----
-    const galleryEl = q("[data-tour-gallery]");
+    // ---- "Why travellers choose this experience": 4 cards, same look as the About page's
+    // "why book" tiles. The first 3 are real, already-used site-wide promises; the photo-stops
+    // card uses this tour's own real highlights so it is different for every tour. ----
+    const whyItems = [
+      {
+        icon: '<path d="M3 17V7a1 1 0 0 1 1-1h10.5L21 12.5V17"/><path d="M14.5 6v6.5H21"/><path d="M3 17h1.5M8.5 17h6M18.5 17H21"/><circle cx="6.5" cy="17" r="2"/><circle cx="16.5" cy="17" r="2"/>',
+        title: "Hotel & Metro Pickup",
+        text: "Pickup and drop-off at your hotel or a nearby metro station.",
+        photo: "images/why-hotel-pickup-bus.webp",
+      },
+      {
+        icon: '<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>',
+        title: "Friendly, English-Speaking Guide",
+        text: "Real commentary and local context at every stop.",
+        photo: "images/why-guide.webp",
+      },
+      {
+        icon: '<path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/>',
+        title: "Photo Stops at Every Highlight",
+        text: "Capture " + tour.points.slice(0, 2).join(" and ") + ".",
+        // Real photo only for the tour it actually shows (Ferrari World is on the Abu Dhabi
+        // route, Dubai Frame is on the Dubai route); other tours keep the placeholder until
+        // their own stop photo is supplied
+        photo:
+          slug === "abu-dhabi"
+            ? "images/why-photo-stops.webp"
+            : slug === "dubai"
+            ? "images/why-photo-stops-dubai.webp"
+            : undefined,
+      },
+      {
+        icon: '<path d="M12 22s8-4 8-11V5l-8-3-8 3v6c0 7 8 11 8 11z"/><path d="M9 12l2 2 4-4"/>',
+        title: "No Hidden Costs",
+        text: "Every stop is included, nothing extra to pay at the door.",
+      },
+    ];
+    const whyEl = q("[data-tour-why]");
+    whyItems.forEach((item) => {
+      const card = document.createElement("div");
+      card.className = "why-card card fade-up";
+      // A real photo when we have one; otherwise the same branded placeholder used for stop
+      // cards elsewhere on the site (NXT logo on a crimson panel), so the row stays even until
+      // more photos are supplied.
+      const photoHtml = item.photo
+        ? '<div class="tour-why-photo"><img src="' + item.photo + '" alt="" loading="lazy" decoding="async" /></div>'
+        : '<div class="tour-why-photo is-empty"><img src="images/logo-mark.png" alt="" /></div>';
+      card.innerHTML =
+        photoHtml +
+        '<div class="why-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
+        item.icon +
+        "</svg></div><h3></h3><p></p>";
+      card.querySelector("h3").textContent = item.title;
+      card.querySelector("p").textContent = item.text;
+      card.classList.add("in-view"); // added after the scroll-reveal observer runs, so reveal it directly
+      whyEl.appendChild(card);
+    });
+
+    // ---- Gallery: prev/next + thumbnail strip below the photo, plus a "n / total" counter ----
     const photoEl = q("[data-tour-photo]");
     const captionEl = q("[data-tour-caption]");
     const thumbsEl = q("[data-tour-thumbs]");
+    const countEl = q("[data-tour-lightbox-count]");
     let photoIndex = 0;
     let swapToken = 0;
     let thumbBtns = [];
@@ -1470,6 +1570,7 @@ if (tourPage) {
       preload.onload = preload.onerror = () => setTimeout(apply, noMotion ? 0 : 150);
       preload.src = p.src;
       thumbBtns.forEach((b, n) => b.classList.toggle("is-active", n === photoIndex));
+      countEl.textContent = photoIndex + 1 + " / " + photos.length;
     };
 
     thumbBtns = tour.photos.map((p, n) => {
@@ -1485,15 +1586,56 @@ if (tourPage) {
       thumbsEl.appendChild(b);
       return b;
     });
-    galleryEl.classList.toggle("is-single", tour.photos.length < 2);
+    const isSingle = tour.photos.length < 2;
+    q("[data-tour-lightbox-prev]").hidden = isSingle;
+    q("[data-tour-lightbox-next]").hidden = isSingle;
+    thumbsEl.hidden = isSingle;
     showPhoto(0);
 
-    q(".tm-prev").addEventListener("click", () => showPhoto(photoIndex - 1));
-    q(".tm-next").addEventListener("click", () => showPhoto(photoIndex + 1));
+    q("[data-tour-lightbox-prev]").addEventListener("click", () => showPhoto(photoIndex - 1));
+    q("[data-tour-lightbox-next]").addEventListener("click", () => showPhoto(photoIndex + 1));
     document.addEventListener("keydown", (e) => {
       if (e.target.closest("input, textarea, select")) return;
       if (e.key === "ArrowRight") showPhoto(photoIndex + 1);
       if (e.key === "ArrowLeft") showPhoto(photoIndex - 1);
+    });
+
+    // ---- Photo grid: one big photo + up to 4 small tiles, adapts to how many photos this tour has.
+    // Clicking any tile opens the full-screen viewer above at that photo. ----
+    const lightbox = q("[data-tour-lightbox]");
+    const openLightbox = (index) => {
+      showPhoto(index);
+      if (typeof lightbox.showModal === "function") lightbox.showModal();
+    };
+    q("[data-tour-lightbox-close]").addEventListener("click", () => lightbox.close());
+    lightbox.addEventListener("click", (e) => {
+      if (e.target === lightbox) lightbox.close(); // clicked the backdrop
+    });
+
+    const gridEl = q("[data-tour-gallery-grid]");
+    const gridPhotos = tour.photos.slice(0, 5); // 1 big + up to 4 small
+    const extra = tour.photos.length - gridPhotos.length;
+    gridEl.dataset.count = String(gridPhotos.length);
+    gridPhotos.forEach((p, i) => {
+      const tile = document.createElement("button");
+      tile.type = "button";
+      tile.className = i === 0 ? "g-main" : "g-thumb";
+      tile.setAttribute("aria-label", "View photo: " + p.cap);
+      const im = document.createElement("img");
+      im.src = p.src;
+      im.alt = p.alt;
+      im.loading = i === 0 ? "eager" : "lazy";
+      im.style.objectPosition = p.pos || "50% 50%";
+      tile.appendChild(im);
+      // The last small tile shows how many more photos this tour has, if any
+      if (extra > 0 && i === gridPhotos.length - 1) {
+        const more = document.createElement("span");
+        more.className = "g-more";
+        more.textContent = "+" + extra + " photo" + (extra === 1 ? "" : "s");
+        tile.appendChild(more);
+      }
+      tile.addEventListener("click", () => openLightbox(i));
+      gridEl.appendChild(tile);
     });
 
     // ---- Stops / inclusions (only tours that have this data get the section) ----
@@ -1612,9 +1754,14 @@ if (tourPage) {
 
     const updateWhatsApp = () => {
       const p = currentPrice();
+      const priceText = p && p.tiers
+        ? " (" + p.tiers.map((t) => t.seats + "-seater " + money(t.price)).join(" or ") + ")"
+        : p
+        ? ", " + money(p.price)
+        : ". Please send me the private tour price";
       const lines = [
         "Hello NXT Tours! 👋",
-        "I'd like to book the " + tour.name + " " + tour.accent + modeLabel() + (p ? ", " + money(p.price) + "." : ". Please send me the private tour price."),
+        "I'd like to book the " + tour.name + " " + tour.accent + modeLabel() + priceText + ".",
       ];
       if (dateEl.value) lines.push("Travel date: " + dateEl.value);
       if (guestsEl.value) lines.push("Guests: " + guestsEl.value);
