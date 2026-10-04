@@ -94,13 +94,7 @@ if (yearEl) {
 // The visitor just presses Send there. Nothing is sent until they do.
 const WHATSAPP_NUMBER = "971586272827";
 
-// Supabase backend (bookings + reviews). The publishable key is MEANT to be public: on its own it can
-// only do what the database security rules allow (add a review, read approved reviews, call the
-// create-booking function). Never put the secret / service_role key here.
-const BACKEND = {
-  url: "https://gqlceqeinyfdjbshmacb.supabase.co",
-  key: "sb_publishable_J9l-V7Moj1nFF8L0reZP4Q_PoTsxK7M",
-};
+// BACKEND (Supabase URL + public key) is defined in js/config.js, loaded before this file.
 // OPTIONAL email copy: put the client's email between the quotes to ALSO get every inquiry
 // by email (sent through the free formsubmit.co service; no account needed, but the client
 // must click the "activate" link in the first email FormSubmit sends). Empty = WhatsApp only.

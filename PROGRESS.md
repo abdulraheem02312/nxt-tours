@@ -17,14 +17,20 @@ Update this file at the end of every work session (newest first).
 - Create **hello@nxttours.com** in their Google Workspace (company email is on Google, not cPanel). Then set `TEAM_EMAILS=hello@nxttours.com` so new-booking alerts arrive.
 - Decide when to put the site live on nxttours.com (cPanel hosting, a site is already running there).
 
+- **Admin panel, phase 1** (`admin.html`, not linked from the site): email/password login, Bookings (filter by status, search, sort by travel date, change status, team notes, WhatsApp/email the customer), Reviews (approve, hide, delete), Team (owner adds people with a role and a temporary password, resets passwords, removes people; the last owner can't be removed), Account (change password). New people must set their own password on first login. Tested end to end, including that editors can't make themselves owner.
+
+### First owner login (one-time, done by a person, not in code)
+1. Supabase > Authentication > Users > Add user > Create new user: your email + a strong password, tick "Auto Confirm User".
+2. Supabase > SQL Editor, run (with your email): `insert into public.admin_users (user_id, role, email) select id, 'owner', email from auth.users where email = 'you@example.com';`
+3. Log in at `/admin.html`. Add everyone else from the Team page.
+
 ### Next
-1. **Admin panel, phase 1** (`admin.html`): login, bookings list with status + WhatsApp, review approval, team management (owner adds people with a role).
+1. Create the first owner login (above).
 2. Collect more Abu Dhabi reviews from the Facebook page.
 3. About / Contact pages still say "hotel & metro pickup" (hotel pickup is private tours only).
 4. Admin panel phase 2: edit prices, tour text, timeline, photos from the panel.
 5. Other tours (Dubai, Hatta, Desert Safari, Khorfakkan) to the same level as Abu Dhabi.
 6. Move the site to nxttours.com, then make this repo private and switch `SITE_URL` (email logo) to nxttours.com.
 
-### Until the admin panel exists
-- Approve a website review: Supabase > Table Editor > `reviews` > tick `approved`.
-- See bookings: Supabase > Table Editor > `bookings`.
+### Managing bookings and reviews
+- Use the admin panel at `/admin.html` (after the first owner login exists).

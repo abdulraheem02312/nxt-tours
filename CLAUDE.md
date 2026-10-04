@@ -16,7 +16,8 @@ Static website (HTML/CSS/JS) for NXT Tours, a Dubai tour operator, plus a Supaba
 |---|---|
 | All tour data (prices, timeline, pickup points, photos, notes) | `js/script.js`, the `TOURS` object. Change it once, every page updates. |
 | Facebook reviews shown on tour pages | `js/script.js`, the `REVIEWS` array |
-| Backend settings (Supabase URL + public key) | `js/script.js`, the `BACKEND` object. The publishable key is meant to be public. |
+| Backend settings (Supabase URL + public key) | `js/config.js`, the `BACKEND` object (loaded on every page). The publishable key is meant to be public. |
+| Admin panel | `admin.html` + `js/admin.js` + `css/admin.css`. Team management goes through the `admin-team` Edge Function. |
 | Translations for the language switcher | `js/i18n.js` |
 | Tour detail page (one template for all tours) | `tour.html?t=<slug>` |
 | Styles and brand colours | `css/style.css`, `:root` variables |
@@ -39,7 +40,8 @@ Static website (HTML/CSS/JS) for NXT Tours, a Dubai tour operator, plus a Supaba
 
 ### Working on the backend
 - Put your own Supabase personal access token in `.env` as `SUPABASE_ACCESS_TOKEN=sbp_...` (each person makes their own token).
-- Deploy a function: `npx supabase functions deploy create-booking --project-ref gqlceqeinyfdjbshmacb --no-verify-jwt --use-api`
+- Deploy a function: `npx supabase functions deploy <create-booking|admin-team> --project-ref gqlceqeinyfdjbshmacb --no-verify-jwt --use-api`
+- To test the admin panel, make throwaway logins with `@example.com` emails and delete them afterwards. Never create or change real people's logins in tests.
 - Database changes: add a new file in `supabase/migrations/`, then run it (Supabase SQL editor or the Management API). Never edit old migration files.
 - Test with throwaway data and delete it afterwards. Never send test emails to real customers (use `delivered@resend.dev`).
 - Do not connect this Supabase project to GitHub: it would block transferring the project to the client later.

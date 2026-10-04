@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>NXT Tours Admin</title>
+  <link rel="icon" type="image/png" href="images/favicon.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/admin.css?v=20261004l" />
+</head>
+<body>
+
+  <!-- ===== Login ===== -->
+  <main class="ad-auth" data-view="login" hidden>
+    <form class="ad-auth-card" data-login-form novalidate>
+      <div class="ad-auth-logo"><img src="images/nxt-logo-white.png" alt="NXT Tours" width="190" height="58" /></div>
+      <h1>Admin login</h1>
+      <p class="ad-muted">For the NXT Tours team only.</p>
+      <label class="ad-field">Email
+        <input type="email" autocomplete="username" required data-login-email />
+      </label>
+      <label class="ad-field">Password
+        <input type="password" autocomplete="current-password" required data-login-password />
+      </label>
+      <p class="ad-error" data-login-error hidden></p>
+      <button type="submit" class="ad-btn ad-btn-primary ad-btn-block">Log in</button>
+      <p class="ad-muted ad-small">Forgot your password? Ask the account owner to reset it from the Team page.</p>
+    </form>
+  </main>
+
+  <!-- ===== First login: set your own password ===== -->
+  <main class="ad-auth" data-view="setpass" hidden>
+    <form class="ad-auth-card" data-setpass-form novalidate>
+      <div class="ad-auth-logo"><img src="images/nxt-logo-white.png" alt="NXT Tours" width="190" height="58" /></div>
+      <h1>Set your password</h1>
+      <p class="ad-muted">You logged in with a temporary password. Please choose your own (at least 10 characters).</p>
+      <label class="ad-field">New password
+        <input type="password" autocomplete="new-password" minlength="10" required data-setpass-1 />
+      </label>
+      <label class="ad-field">Repeat new password
+        <input type="password" autocomplete="new-password" minlength="10" required data-setpass-2 />
+      </label>
+      <p class="ad-error" data-setpass-error hidden></p>
+      <button type="submit" class="ad-btn ad-btn-primary ad-btn-block">Save password</button>
+    </form>
+  </main>
+
+  <!-- ===== Logged in but not on the team ===== -->
+  <main class="ad-auth" data-view="noaccess" hidden>
+    <div class="ad-auth-card">
+      <div class="ad-auth-logo"><img src="images/nxt-logo-white.png" alt="NXT Tours" width="190" height="58" /></div>
+      <h1>No access</h1>
+      <p class="ad-muted">This login is not on the NXT Tours team. Ask the account owner to add you.</p>
+      <button type="button" class="ad-btn ad-btn-ghost ad-btn-block" data-signout>Log out</button>
+    </div>
+  </main>
+
+  <!-- ===== Panel ===== -->
+  <div class="ad-app" data-view="app" hidden>
+    <header class="ad-top">
+      <img class="ad-top-logo" src="images/nxt-logo-white.png" alt="NXT Tours" width="130" height="40" />
+      <nav class="ad-tabs" role="tablist" aria-label="Admin sections">
+        <button type="button" role="tab" class="ad-tab" data-tab="bookings" data-roles="owner editor">Bookings <span class="ad-count" data-count="new" hidden></span></button>
+        <button type="button" role="tab" class="ad-tab" data-tab="reviews" data-roles="owner editor reviewer">Reviews <span class="ad-count" data-count="pending" hidden></span></button>
+        <button type="button" role="tab" class="ad-tab" data-tab="team" data-roles="owner">Team</button>
+        <button type="button" role="tab" class="ad-tab" data-tab="account" data-roles="owner editor reviewer">Account</button>
+      </nav>
+      <div class="ad-me">
+        <span class="ad-me-email" data-me-email></span>
+        <span class="ad-role" data-me-role></span>
+      </div>
+    </header>
+
+    <main class="ad-main">
+      <!-- Bookings -->
+      <section class="ad-panel" data-panel="bookings" hidden>
+        <div class="ad-panel-head">
+          <div>
+            <h2>Bookings</h2>
+            <p class="ad-muted">New requests from the website. Contact the customer, then set the status.</p>
+          </div>
+          <button type="button" class="ad-btn ad-btn-ghost" data-refresh>Refresh</button>
+        </div>
+        <div class="ad-toolbar">
+          <div class="ad-filters" data-booking-filters>
+            <button type="button" class="ad-chip is-active" data-status="new">New</button>
+            <button type="button" class="ad-chip" data-status="confirmed">Confirmed</button>
+            <button type="button" class="ad-chip" data-status="completed">Completed</button>
+            <button type="button" class="ad-chip" data-status="cancelled">Cancelled</button>
+            <button type="button" class="ad-chip" data-status="all">All</button>
+          </div>
+          <input type="search" class="ad-search" placeholder="Search name, email, phone or reference" data-booking-search />
+          <select class="ad-select" data-booking-sort aria-label="Sort bookings">
+            <option value="created">Newest first</option>
+            <option value="travel">Travel date (soonest)</option>
+          </select>
+        </div>
+        <div class="ad-list" data-booking-list></div>
+      </section>
+
+      <!-- Reviews -->
+      <section class="ad-panel" data-panel="reviews" hidden>
+        <div class="ad-panel-head">
+          <div>
+            <h2>Reviews</h2>
+            <p class="ad-muted">Reviews written on the website. Approved reviews show on the tour page.</p>
+          </div>
+          <button type="button" class="ad-btn ad-btn-ghost" data-refresh>Refresh</button>
+        </div>
+        <div class="ad-toolbar">
+          <div class="ad-filters" data-review-filters>
+            <button type="button" class="ad-chip is-active" data-filter="pending">Waiting for approval</button>
+            <button type="button" class="ad-chip" data-filter="approved">Approved</button>
+            <button type="button" class="ad-chip" data-filter="all">All</button>
+          </div>
+        </div>
+        <div class="ad-list" data-review-list></div>
+      </section>
+
+      <!-- Team -->
+      <section class="ad-panel" data-panel="team" hidden>
+        <div class="ad-panel-head">
+          <div>
+            <h2>Team</h2>
+            <p class="ad-muted">Who can log in to this panel, and what they can do.</p>
+          </div>
+        </div>
+        <div class="ad-roles-help">
+          <p><strong>Owner:</strong> everything, including adding and removing people.</p>
+          <p><strong>Editor:</strong> bookings and reviews.</p>
+          <p><strong>Reviewer:</strong> reviews only.</p>
+        </div>
+        <form class="ad-card ad-add" data-team-add novalidate>
+          <h3>Add a person</h3>
+          <div class="ad-add-row">
+            <label class="ad-field">Email
+              <input type="email" placeholder="name@example.com" required data-team-email />
+            </label>
+            <label class="ad-field">Role
+              <select required data-team-role>
+                <option value="editor">Editor</option>
+                <option value="reviewer">Reviewer</option>
+                <option value="owner">Owner</option>
+              </select>
+            </label>
+            <button type="submit" class="ad-btn ad-btn-primary">Add</button>
+          </div>
+          <p class="ad-error" data-team-error hidden></p>
+        </form>
+        <div class="ad-card ad-secret" data-team-secret hidden>
+          <h3>Temporary password</h3>
+          <p>Send these login details to <strong data-secret-email></strong> privately (for example on WhatsApp). They will be asked to choose their own password when they first log in. This password is shown only once.</p>
+          <div class="ad-secret-box">
+            <code data-secret-text></code>
+            <button type="button" class="ad-btn ad-btn-ghost" data-secret-copy>Copy</button>
+          </div>
+          <p class="ad-muted ad-small">Login page: <span data-secret-url></span></p>
+        </div>
+        <div class="ad-list" data-team-list></div>
+      </section>
+
+      <!-- Account -->
+      <section class="ad-panel" data-panel="account" hidden>
+        <div class="ad-panel-head">
+          <div>
+            <h2>My account</h2>
+            <p class="ad-muted" data-account-who></p>
+          </div>
+        </div>
+        <form class="ad-card ad-narrow" data-account-form novalidate>
+          <h3>Change password</h3>
+          <label class="ad-field">New password (at least 10 characters)
+            <input type="password" autocomplete="new-password" minlength="10" data-account-1 />
+          </label>
+          <label class="ad-field">Repeat new password
+            <input type="password" autocomplete="new-password" minlength="10" data-account-2 />
+          </label>
+          <p class="ad-error" data-account-error hidden></p>
+          <p class="ad-ok" data-account-ok hidden>Password changed.</p>
+          <button type="submit" class="ad-btn ad-btn-primary">Save password</button>
+        </form>
+        <button type="button" class="ad-btn ad-btn-ghost" data-signout>Log out</button>
+      </section>
+    </main>
+  </div>
+
+  <div class="ad-toast" data-toast role="status" aria-live="polite" hidden></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="js/config.js?v=20261004l"></script>
+  <script src="js/admin.js?v=20261004l"></script>
+</body>
+</html>
