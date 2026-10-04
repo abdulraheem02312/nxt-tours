@@ -12,7 +12,7 @@
 
   <link rel="icon" type="image/png" href="images/favicon.png" />
 
-  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/style.css?v=20261004k" />
 </head>
 <body>
 
@@ -183,36 +183,21 @@
   </section>
 
   <!-- ===== Featured: Abu Dhabi City Tour (Bestseller) ===== -->
-  <section class="section section-muted bg-fabric has-bubbles">
+  <section class="section section-muted bg-fabric has-bubbles" data-spotlight-tour="abu-dhabi">
     <div class="container">
       <div class="heading-watermark is-long" aria-hidden="true">POPULAR</div>
       <div class="spotlight fade-up">
-        <!-- Photo slider (5 stops of the tour). All 5 photos are local files in images/. -->
-        <div class="spotlight-img slider" data-slider role="group" aria-roledescription="carousel" aria-label="Abu Dhabi City Tour photos">
+        <!-- Photo slider: script.js rebuilds the slides from TOURS["abu-dhabi"].photos, so it always
+             shows the same photos as the tour page. The single slide here is only the no-JS fallback. -->
+        <div class="spotlight-img slider" data-slider data-slider-tour="abu-dhabi" role="group" aria-roledescription="carousel" aria-label="Abu Dhabi City Tour photos">
           <div aria-live="polite">
-            <figure class="slide is-active" role="group" aria-roledescription="slide" aria-label="1 of 5">
-              <img src="images/abu-dhabi-grand-mosque-courtyard.jpg" width="668" height="399" alt="Sheikh Zayed Grand Mosque in Abu Dhabi, seen across its marble courtyard under a blue sky" loading="lazy" decoding="async" />
+            <figure class="slide is-active" role="group" aria-roledescription="slide" aria-label="1 of 1">
+              <img src="images/stops/abu-dhabi-grand-mosque.webp" width="1600" height="904" alt="Sheikh Zayed Grand Mosque from above, with its white domes, minarets and blue reflecting pools" loading="lazy" decoding="async" />
               <figcaption>Sheikh Zayed Grand Mosque</figcaption>
             </figure>
-            <figure class="slide" role="group" aria-roledescription="slide" aria-label="2 of 5" aria-hidden="true">
-              <img src="images/abu-dhabi-baps-mandir.jpg" width="1199" height="776" alt="BAPS Hindu Mandir in Abu Dhabi at sunset" loading="lazy" decoding="async" />
-              <figcaption>BAPS Hindu Mandir</figcaption>
-            </figure>
-            <figure class="slide" role="group" aria-roledescription="slide" aria-label="3 of 5" aria-hidden="true">
-              <img src="images/abu-dhabi-ferrari-world-hd.jpg" width="1600" height="1200" alt="Sharp aerial view of the red Ferrari World roof with the Ferrari shield on Yas Island" loading="lazy" decoding="async" />
-              <figcaption>Ferrari World Yas Island</figcaption>
-            </figure>
-            <figure class="slide" role="group" aria-roledescription="slide" aria-label="4 of 5" aria-hidden="true">
-              <img src="images/abu-dhabi-etihad-towers.jpg" width="736" height="611" alt="Etihad Towers glass skyscrapers with the UAE flag in Abu Dhabi" style="object-position: 50% 35%" loading="lazy" decoding="async" />
-              <figcaption>Etihad Towers</figcaption>
-            </figure>
-            <figure class="slide" role="group" aria-roledescription="slide" aria-label="5 of 5" aria-hidden="true">
-              <img src="images/abu-dhabi-emirates-palace.jpg" width="1400" height="933" alt="Emirates Palace in Abu Dhabi, its pink sandstone facade and grand stairway under a blue sky" loading="lazy" decoding="async" />
-              <figcaption>Emirates Palace</figcaption>
-            </figure>
-</div>
+          </div>
 
-          <span class="slider-count" aria-hidden="true">1 / 5</span>
+          <span class="slider-count" aria-hidden="true">1 / 1</span>
 
           <button type="button" class="slider-btn prev" aria-label="Previous photo">
             <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M15.5 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" /></svg>
@@ -223,10 +208,6 @@
 
           <div class="slider-dots">
             <button type="button" class="is-current" aria-label="Go to photo 1"></button>
-            <button type="button" aria-label="Go to photo 2"></button>
-            <button type="button" aria-label="Go to photo 3"></button>
-            <button type="button" aria-label="Go to photo 4"></button>
-            <button type="button" aria-label="Go to photo 5"></button>
           </div>
         </div>
         <div>
@@ -240,7 +221,7 @@
             <li data-i18n="spotAD.l3">Emirates Palace & Etihad Towers</li>
             <li data-i18n="spotAD.l4">Abu Dhabi Corniche</li>
             <li data-i18n="spotAD.l5">Qasr Al Watan Palace</li>
-            <li data-i18n="spotAD.l6">Hotel & metro pickup included</li>
+            <li data-i18n="spotAD.l6">Free pickup in Dubai</li>
           </ul>
           <p class="spotlight-more" data-i18n="spotAD.more">And much more</p>
           <div class="spotlight-price">AED 79.99 <del class="was">AED 120</del></div>
@@ -252,7 +233,7 @@
   </section>
 
   <!-- ===== Featured: Desert Safari (dark spotlight) ===== -->
-  <section class="section matte-section">
+  <section class="section matte-section" data-spotlight-tour="desert-safari">
     <div class="matte-bg" aria-hidden="true"></div>
     <div class="container">
       <div class="spotlight reverse spotlight-dark fade-up">
@@ -345,7 +326,7 @@
       <div class="tour-card tour-wide card fade-up" data-tour="abu-dhabi">
         <div class="tour-img-wrap">
           <span class="tour-type-badge">Sharing & Private</span>
-          <img src="images/abu-dhabi-grand-mosque-aerial.jpg" width="1200" height="678" alt="Sheikh Zayed Grand Mosque seen from above" loading="lazy" decoding="async" />
+          <img src="images/stops/abu-dhabi-grand-mosque.webp" width="1600" height="904" alt="Sheikh Zayed Grand Mosque from above, with its white domes, minarets and blue reflecting pools" loading="lazy" decoding="async" />
         </div>
         <div class="tour-body">
           <h3 data-i18n="adv.ad.t">Abu Dhabi City Tour</h3>
@@ -649,7 +630,7 @@
 
   <a href="https://wa.me/971586272827" class="whatsapp-float" target="_blank" rel="noopener" aria-label="Chat on WhatsApp"><svg class="icon-wa" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.372-.01-.571-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413"/></svg></a>
 
-  <script src="js/i18n.js"></script>
-  <script src="js/script.js"></script>
+  <script src="js/i18n.js?v=20261004k"></script>
+  <script src="js/script.js?v=20261004k"></script>
 </body>
 </html>

@@ -1,0 +1,7 @@
+# Secret keys: never upload
+.env
+.env.*
+
+# Supabase local tooling files
+supabase/.temp/
+supabase/.branches/

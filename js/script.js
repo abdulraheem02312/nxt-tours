@@ -93,6 +93,14 @@ if (yearEl) {
 // (the client's number) with the whole inquiry already typed into the message.
 // The visitor just presses Send there. Nothing is sent until they do.
 const WHATSAPP_NUMBER = "971586272827";
+
+// Supabase backend (bookings + reviews). The publishable key is MEANT to be public: on its own it can
+// only do what the database security rules allow (add a review, read approved reviews, call the
+// create-booking function). Never put the secret / service_role key here.
+const BACKEND = {
+  url: "https://gqlceqeinyfdjbshmacb.supabase.co",
+  key: "sb_publishable_J9l-V7Moj1nFF8L0reZP4Q_PoTsxK7M",
+};
 // OPTIONAL email copy: put the client's email between the quotes to ALSO get every inquiry
 // by email (sent through the free formsubmit.co service; no account needed, but the client
 // must click the "activate" link in the first email FormSubmit sends). Empty = WhatsApp only.
@@ -117,7 +125,7 @@ if (contactForm) {
     const val = (name) => (contactForm.elements[name] ? contactForm.elements[name].value.trim() : "");
 
     // Build the message line by line (optional fields are skipped when empty)
-    const lines = ["Hello NXT Tours! 👋", "", "Name: " + val("name"), "Phone: " + val("phone")];
+    const lines = ["Hello NXT Tours!", "", "Name: " + val("name"), "Phone: " + val("phone")];
     if (val("email")) lines.push("Email: " + val("email"));
     lines.push("Tour: " + val("tour"));
     if (val("date")) lines.push("Travel date: " + val("date"));
@@ -384,7 +392,7 @@ const initSlider = (root) => {
   });
   root.addEventListener("pointercancel", () => (startX = null));
 };
-document.querySelectorAll("[data-slider]").forEach(initSlider);
+// (Sliders are started further down, after the TOURS list, so a slider can take its photos from a tour.)
 
 // Particles: any element with data-particles="N" gets N tiny, very faint dots that
 // drift slowly. Sizes, positions, speeds and colours are random, so no two look alike.
@@ -393,7 +401,8 @@ document.querySelectorAll("[data-particles]").forEach((box) => {
   const count = parseInt(box.dataset.particles, 10) || 20;
   // data-particles-theme="light" = white/gold dots for dark (crimson) backgrounds
   const onDark = box.dataset.particlesTheme === "light";
-  const colors = onDark ? ["#ffffff", "#ffd27a", "#ffc2dc"] : ["#e0578f", "#f4a3c4", "#f2b45a", "#c9497f"];
+  // Brand colours only: crimson #AA1345, orange #F39200, white, and light steps of them
+  const colors = onDark ? ["#ffffff", "#f39200", "#f2c9d6"] : ["#aa1345", "#d9708f", "#f39200", "#c9406b"];
   const rand = (min, max) => min + Math.random() * (max - min);
   // data-particles-style="rich" = also rings, diamonds and 4-point stars, and they twinkle
   const rich = box.dataset.particlesStyle === "rich";
@@ -617,10 +626,31 @@ if (statEls.length) {
 const tourUnsplash = (id, w) => "https://images.unsplash.com/photo-" + id + "?auto=format&fit=crop&w=" + w + "&q=75";
 const tourPexels = (id, w) => "https://images.pexels.com/photos/" + id + "/pexels-photo-" + id + ".jpeg?auto=compress&cs=tinysrgb&w=" + w;
 
+// Abu Dhabi photos (from the client's Drive, 2026-10-04), shared by the gallery, stop cards and timeline
+const AD = (slug, alt) => ({ src: "images/stops/abu-dhabi-" + slug + ".webp", alt });
+const adPic = {
+  mosque: AD("grand-mosque", "Sheikh Zayed Grand Mosque from above, with its white domes, minarets and blue reflecting pools"),
+  baps: AD("baps-temple", "The carved pink sandstone spires of the BAPS Hindu Mandir above its reflecting pool"),
+  ferrari: AD("ferrari-world", "The red roof of Ferrari World on Yas Island seen from above"),
+  qasr: AD("qasr-al-watan", "The white palace of Qasr Al Watan with its central dome and wide marble courtyard"),
+  palace: AD("emirates-palace", "Emirates Palace with its arched sandstone front, palm trees and fountains"),
+  etihad: AD("etihad-towers", "The five curved glass skyscrapers of Etihad Towers with palm trees and a UAE flag"),
+  warner: AD("warner-bros", "The yellow Warner Bros. World entrance canopy under a blue sky"),
+  heritage: AD("heritage-village", "Visitors walking through the sandstone gate of the UAE Heritage Village"),
+  marina: AD("marina-mall", "The curved glass front of Marina Mall Abu Dhabi with palm trees and gardens"),
+  corniche: AD("corniche", "The tiled Abu Dhabi Corniche promenade beside turquoise water, with the skyline in the distance"),
+  lastExit: AD("last-exit", "Vintage cars stacked up next to the Last Exit road sign"),
+  nec: AD("national-exhibition-centre", "The leaning Capital Gate tower at the Abu Dhabi National Exhibition Centre"),
+  bateen: AD("al-bateen", "The Al Bateen waterfront road lined with palms, with the Abu Dhabi skyline and turquoise sea behind"),
+  // These two were generated in ChatGPT (the art gallery from a real reference photo of the building)
+  dates: AD("dates-market", "Brass trays piled high with dark and golden fresh dates in a covered market, with coffee pots and palm baskets"),
+  marjan: AD("marjan-art-gallery", "The sandstone front of Marjan art gallery with its dark MARJAN sign and a row of old heritage photos"),
+};
+
 const TOURS = {
   "abu-dhabi": {
     name: "Abu Dhabi", accent: "City Tour", type: "Sharing & Private",
-    price: 79.99, was: 120, duration: "Day trip",
+    price: 79.99, was: 120, duration: "Full day, 7:30 AM to 9:00 PM",
     heroTitle: { prefix: "Best of Abu Dhabi:", accent: "Full-Day City Tour from Dubai" },
     // Private tour: priced per vehicle, not per person (same rates as the partner company's
     // own private tour, per Abdul Raheem 2026-09-29)
@@ -628,35 +658,138 @@ const TOURS = {
       { seats: 7, price: 599 },
       { seats: 14, price: 999 },
     ],
-    intro: "Abu Dhabi in a single day: start at the gleaming white domes of the Sheikh Zayed Grand Mosque, then continue along the waterfront to Emirates Palace and Etihad Towers. Feel the thrill of Ferrari World Yas Island, and pass Qasr Al Watan and the Abu Dhabi Corniche along the way. It's the UAE's most complete day trip, loved by families, couples, and solo travellers alike.",
-    points: ["Sheikh Zayed Grand Mosque", "Emirates Palace & Etihad Towers", "Ferrari World Yas Island"],
-    // Shown on the Private Tour button: a real stop from this tour, as an example of what can be customized
-    privatePlace: "the city",
+    intro: "Abu Dhabi in a single day. Start on Yas Island at Ferrari World and Warner Bros. World, taste fresh dates at the Dates Market and stroll the Abu Dhabi Corniche. After lunch at Marina Mall, take photos at Emirates Palace and Etihad Towers and drive past Qasr Al Watan. End the day at the gleaming white domes of the Sheikh Zayed Grand Mosque and the hand-carved BAPS Hindu Temple. It's the UAE's most complete day trip, loved by families, couples, and solo travellers alike.",
+    points: ["Sheikh Zayed Grand Mosque", "BAPS Hindu Temple", "Emirates Palace & Etihad Towers", "Ferrari World Yas Island"],
+    // Gallery at the top of the tour page: the first 5 show in the grid, the rest behind "+N photos"
     photos: [
-      { src: "images/abu-dhabi-grand-mosque-aerial.jpg", alt: "Sheikh Zayed Grand Mosque seen from above", cap: "Sheikh Zayed Grand Mosque" },
-      { src: tourUnsplash("1512632578888-169bbbc64f33", 1200), alt: "Sheikh Zayed Grand Mosque at sunset", cap: "The mosque at sunset" },
-      { src: "images/abu-dhabi-etihad-towers.jpg", alt: "Etihad Towers in Abu Dhabi", cap: "Etihad Towers" },
-      { src: "images/abu-dhabi-ferrari-world-hd.jpg", alt: "Ferrari World on Yas Island", cap: "Ferrari World, Yas Island" }
+      { ...adPic.mosque, cap: "Sheikh Zayed Grand Mosque" },
+      { ...adPic.baps, cap: "BAPS Hindu Temple" },
+      { ...adPic.ferrari, cap: "Ferrari World, Yas Island" },
+      { ...adPic.qasr, cap: "Qasr Al Watan" },
+      { ...adPic.palace, cap: "Emirates Palace" },
+      { ...adPic.etihad, cap: "Etihad Towers" },
+      { ...adPic.warner, cap: "Warner Bros. World" },
+      { ...adPic.heritage, cap: "Heritage Village" },
+      { ...adPic.marina, cap: "Marina Mall" },
+      { ...adPic.corniche, cap: "Abu Dhabi Corniche" },
+      { ...adPic.lastExit, cap: "Last Exit" },
+      { ...adPic.nec, cap: "National Exhibition Centre" },
+      { ...adPic.dates, cap: "Dates Market" },
+      { ...adPic.marjan, cap: "Al Marjan Art Gallery" }
     ],
-    // The 15 stops from the client's poster, in the poster's order. A stop without src has no photo yet:
-    // it gets a branded placeholder card (add src + alt to swap in the real photo).
+    // The 15 stops, in the order the tour visits them. A stop without src gets a branded placeholder card.
     stops: [
-      { name: "BAPS Temple Abu Dhabi", src: "images/stops/abu-dhabi-baps-temple.webp", alt: "The carved pink sandstone spires of the BAPS Hindu Mandir above its white marble steps and reflecting pool" },
-      { name: "Al Bateen Area", src: "images/stops/abu-dhabi-al-bateen.webp", alt: "The Al Bateen waterfront road lined with palms, with the Abu Dhabi skyline and turquoise sea behind" },
-      { name: "Emirates Palace", src: "images/stops/abu-dhabi-emirates-palace.webp", alt: "Emirates Palace with its pale dome, palm gardens and a long reflecting pool with fountains" },
-      { name: "Heritage Village", src: "images/stops/abu-dhabi-heritage-village.webp", alt: "Old-style sandstone houses with wind towers on a stone path by the sea, with the Abu Dhabi skyline behind" },
-      { name: "Warner Bros World" },
-      { name: "Sheikh Zayed Grand Mosque" },
-      { name: "Qasr Al Watan" },
-      { name: "Al Marjan Art Gallery" },
-      { name: "Abu Dhabi Corniche" },
-      { name: "Ferrari World & Yas Mall" },
-      { name: "National Exhibition Center" },
-      { name: "Etihad Towers" },
-      { name: "Marina Mall Abu Dhabi" },
-      { name: "Dates Market" },
-      { name: "Last Exit" }
-    ]
+      { name: "Last Exit", ...adPic.lastExit },
+      { name: "Ferrari World & Yas Mall", ...adPic.ferrari },
+      { name: "Warner Bros World", ...adPic.warner },
+      { name: "Dates Market", ...adPic.dates },
+      { name: "Abu Dhabi Corniche", ...adPic.corniche },
+      { name: "Heritage Village", ...adPic.heritage },
+      { name: "Marina Mall Abu Dhabi", ...adPic.marina },
+      { name: "Al Marjan Art Gallery", ...adPic.marjan },
+      { name: "Emirates Palace", ...adPic.palace },
+      { name: "Etihad Towers", ...adPic.etihad },
+      { name: "Qasr Al Watan", ...adPic.qasr },
+      { name: "Al Bateen Area", ...adPic.bateen },
+      { name: "National Exhibition Center", ...adPic.nec },
+      { name: "Sheikh Zayed Grand Mosque", ...adPic.mosque },
+      { name: "BAPS Temple Abu Dhabi", ...adPic.baps }
+    ],
+    // Hour-by-hour plan from the partner's Abu Dhabi tour PDF (Oct 2026), plus Emirates Palace, Etihad
+    // Towers and Qasr Al Watan placed where the client said (between the art gallery and Al Bateen).
+    // kind: "travel" rows get a vehicle icon and no photo.
+    timeline: [
+      { time: "7:30 - 9:30 AM", title: "Pickup from Dubai", kind: "travel", text: "Sharing tour: pickup from a metro station or meeting point. Your pickup time depends on your pickup point, see the full list below. Private tour: pickup from your hotel." },
+      { time: "9:30 AM", title: "Last Exit", place: "Dubai - Abu Dhabi border", dur: "30 min", text: "Break for refreshments and restrooms, with vintage cars and a desert-style setting for photos.", ...adPic.lastExit },
+      { time: "10:00 AM", title: "Ferrari World & Yas Mall", place: "Yas Island", dur: "30 min photo stop", text: "Photo stop at Ferrari World's famous red roof, then free time to explore Yas Mall next door.", ...adPic.ferrari },
+      { time: "12:00 PM", title: "Warner Bros. World Abu Dhabi", dur: "20 min photo stop", text: "Photos at the entrance and a quick look around outside the park.", ...adPic.warner },
+      { time: "12:45 PM", title: "Dates Market", dur: "20 - 30 min", text: "Visit the largest dates market in the UAE and taste fresh dates for free. Buying is optional.", ...adPic.dates },
+      { time: "1:30 PM", title: "Abu Dhabi Corniche", dur: "10 min photo stop", text: "Photo stop along the long, palm-lined waterfront promenade.", ...adPic.corniche },
+      { time: "1:50 PM", title: "Heritage Village", dur: "20 - 30 min", text: "See traditional Emirati culture, old-style houses and local crafts.", ...adPic.heritage },
+      { time: "2:20 PM", title: "Marina Mall", dur: "45 min - 1 hr", text: "Lunch break and shopping by the waterfront.", ...adPic.marina },
+      { time: "3:15 PM", title: "Al Marjan Art Gallery", dur: "30 min", text: "View traditional and contemporary artworks and antiques from the UAE and the region.", ...adPic.marjan },
+      { time: "3:45 PM", title: "Emirates Palace", dur: "Photo stop", text: "Photos in front of the grand palace, one of the most famous buildings in Abu Dhabi.", ...adPic.palace },
+      { time: "3:55 PM", title: "Etihad Towers", dur: "Photo stop", text: "Right across from Emirates Palace: photos of the five curved glass towers. About 20 minutes in total for both stops.", ...adPic.etihad },
+      { time: "4:05 PM", title: "Qasr Al Watan", dur: "Drive-through", text: "Drive past the Presidential Palace, a short way on from Emirates Palace.", ...adPic.qasr },
+      { time: "4:15 PM", title: "Al Bateen & National Exhibition Centre", dur: "Drive-through", text: "Scenic drive through the Al Bateen district and past the National Exhibition Centre, with photos from the vehicle.", ...adPic.bateen },
+      { time: "4:30 PM", title: "Sheikh Zayed Grand Mosque", dur: "1.5 hr guided visit", text: "Explore one of the largest mosques in the world. Modest dress is required (see notes below).", ...adPic.mosque },
+      { time: "6:30 PM", title: "BAPS Hindu Temple", dur: "1 hr", text: "Visit the stunning new hand-carved temple, great for photos and cultural insight.", ...adPic.baps },
+      { time: "7:30 PM", title: "Departure from Abu Dhabi", kind: "travel", text: "Relax on the drive back to Dubai." },
+      { time: "9:00 PM", title: "Arrival in Dubai", kind: "travel", text: "Drop-off at your hotel or chosen location. End of tour." }
+    ],
+    // Pickup points and time windows, from the same PDF
+    pickupNote: "Sharing tour pickup points. Please be ready at the start of your time window. Private tours are picked up from your hotel.",
+    // Abu Dhabi only: hotel pickup is for private tours, sharing uses the metro/meeting points
+    pickupFact: "Free pickup & drop-off in Dubai",
+    pickupCard: { title: "Free Pickup in Dubai", text: "Free anywhere in Dubai. Sharing: metro points. Private: your hotel." },
+    // Sharing-tour pickup points from the PDF, grouped by area (areas assigned by location, team to check)
+    pickupAreas: [
+      { area: "Al Nahda & Al Qusais", points: [
+        ["Sahara Centre (Dubai side), Day to Day", "7:30 - 7:45 AM"],
+        ["Al Nahda Metro Station (Exit 2, ENOC petrol station)", "8:00 - 8:15 AM"],
+        ["Stadium Metro Station (Lulu Market)", "8:00 - 8:15 AM"],
+        ["Al Mulla Plaza (Exit 2)", "8:00 - 8:15 AM"],
+        ["Al Qiyadah Metro Station (Exit 2)", "8:00 - 8:15 AM"]
+      ] },
+      { area: "Deira & Airport area", points: [
+        ["Rashidiya Metro Station (KFC)", "7:45 - 8:00 AM"],
+        ["Abu Baker Metro Station (Emarat petrol station)", "7:45 - 8:00 AM"],
+        ["Salah Al Din Metro Station (Gift Village)", "7:45 - 8:00 AM"],
+        ["Al Rigga Metro Station (Delta side)", "7:45 - 8:00 AM"],
+        ["Al Rigga, KFC", "7:45 - 8:00 AM"],
+        ["Abu Hail Metro Station (Kabayel)", "8:00 - 8:15 AM"],
+        ["Union Metro Station (Day to Day)", "8:00 - 8:15 AM"],
+        ["Baniyas Metro Station (McDonald's)", "8:00 - 8:15 AM"],
+        ["Deira City Centre (Novotel Hotel)", "8:15 - 8:30 AM"]
+      ] },
+      { area: "Bur Dubai, Karama & Satwa", points: [
+        ["Al Ghubaiba Metro Station (Wescott Hotel)", "8:15 - 8:30 AM"],
+        ["Sharaf DG Metro Station (Day to Day)", "8:15 - 8:30 AM"],
+        ["BurJuman Metro Station (Exit 3, Carrefour)", "8:15 - 8:30 AM"],
+        ["ADCB Metro Station (Exit 2)", "8:15 - 8:30 AM"],
+        ["Chelsea Plaza (Satwa Roundabout)", "8:30 - 8:45 AM"]
+      ] },
+      { area: "Sheikh Zayed Road & Downtown", points: [
+        ["Financial Centre Metro Station (Exit 2)", "8:30 - 8:45 AM"],
+        ["Emirates Towers Metro Station (Burger King)", "8:30 - 8:45 AM"],
+        ["Dubai Mall Metro Station (Exit 2)", "8:30 - 8:45 AM"],
+        ["Business Bay Metro Station (Bank of Baroda)", "8:30 - 8:45 AM"],
+        ["Onpassive Metro Station (Exit 2)", "8:45 - 9:00 AM"],
+        ["Equiti Metro Station (Exit 2)", "8:45 - 9:00 AM"]
+      ] },
+      { area: "Al Barsha, Marina & JLT", points: [
+        ["Mall of the Emirates Metro Station (Exit 2)", "8:45 - 9:00 AM"],
+        ["Mashreq / InsuranceMarket Metro Station (Exit 2)", "8:45 - 9:00 AM"],
+        ["Internet City Metro Station (Exit 3)", "9:00 - 9:15 AM"],
+        ["Sobha Realty Metro Station (Marina side)", "9:00 - 9:15 AM"],
+        ["DMCC Metro Station (Marina side)", "9:00 - 9:15 AM"],
+        ["Gardens Metro Station (Exit 2)", "9:00 - 9:15 AM"],
+        ["Ibn Battuta Metro Station (Dream City Cafeteria)", "9:15 - 9:30 AM"]
+      ] }
+    ],
+    included: [
+      "Free pickup and drop-off anywhere in Dubai",
+      "Air-conditioned vehicle",
+      "Professional, licensed tour guide and driver",
+      "Bottled drinking water",
+      "Visits and photo stops at every place on the route"
+    ],
+    notIncluded: [
+      "Meals and snacks",
+      "Entry tickets to go inside places like Ferrari World or Warner Bros. World",
+      "Personal expenses and shopping"
+    ],
+    notes: [
+      "This is a sightseeing tour: we take you to every place on the route. If you want to go inside a paid attraction like Ferrari World, or buy anything, that is at your own cost.",
+      "For meals, you can bring food from home or buy it at the stops. The lunch break is at Marina Mall.",
+      "Modest dress is required at the mosque: long sleeves and long trousers for men and women, and women must cover their hair. Shorts are not allowed for men.",
+      "Timings can change a little with traffic and group size.",
+      "Bring comfortable walking shoes, sunglasses, sunscreen and a camera.",
+      "Pickup and drop-off are free anywhere in Dubai. Pickup from another emirate has an extra charge, ask us for the price."
+    ],
+    // Text for the "No Hidden Costs" card on this tour's page
+    costNote: "Transport, guide and every stop included. Entry tickets and meals are up to you.",
+    privateNote: "Custom packages available"
   },
   "hatta": {
     name: "Hatta", accent: "City Tour", type: "Sharing & Private",
@@ -664,7 +797,6 @@ const TOURS = {
     heroTitle: { prefix: "Best of Hatta:", accent: "Mountain & Lake Day Trip from Dubai" },
     intro: "Escape the city for a day in the Hajar Mountains. Cruise along the turquoise waters of Hatta Dam, wind through scenic mountain roads with views over lakes and valleys, and stop at Hatta Heritage Village to see traditional Emirati life up close. With fresh mountain air and a slower pace, it's the perfect break from Dubai's skyline.",
     points: ["Hatta Dam lake", "Hajar Mountain scenic drive", "Hatta Heritage Village stop"],
-    privatePlace: "Hatta",
     photos: [
       { src: tourUnsplash("1672435326246-8420531c37ed", 1200), alt: "Hatta lake surrounded by the Hajar mountains", cap: "Hatta lake" },
       { src: tourUnsplash("1559830379-cbe0ad93161d", 1200), alt: "Turquoise water and rocky Hajar mountains at Hatta", cap: "The Hajar mountains" }
@@ -688,7 +820,6 @@ const TOURS = {
     heroTitle: { prefix: "Best of Dubai:", accent: "Half-Day Icons & Skyline Tour" },
     intro: "See Dubai's biggest icons in just half a day. Snap photos at the base of the Burj Khalifa, the world's tallest building, then drive along the iconic Palm Jumeirah. Wind through the narrow lanes of Old Dubai and Dubai Creek to see the city's traditional side, before heading back through the ultra-modern skyline. A fast-paced first look at everything Dubai is known for.",
     points: ["Burj Khalifa photo stop", "Palm Jumeirah drive-by", "Old Dubai & Dubai Creek"],
-    privatePlace: "the city",
     photos: [
       { src: tourUnsplash("1745750434535-5943ef2fd31a", 1200), alt: "Dubai skyline with the Burj Khalifa", cap: "Dubai skyline & Burj Khalifa" },
       { src: tourUnsplash("1611577810610-642f8ac05c32", 1200), alt: "Modern Dubai skyline at sunset", cap: "The modern skyline" }
@@ -709,7 +840,6 @@ const TOURS = {
     heroTitle: { prefix: "Arabian Desert Safari:", accent: "Dune Bashing & BBQ Evening from Dubai" },
     intro: "Head into the golden dunes of the Arabian desert for an action-packed evening. Feel the adrenaline of dune bashing in a 4x4, try sand boarding down the dunes, then take a calm camel ride as the sun sets over the desert. Wind down with a BBQ buffet dinner under the stars, complete with fire shows, belly dance, tanoura, and henna painting.",
     points: ["Dune bashing in 4x4 vehicles", "Camel rides", "BBQ dinner with live shows"],
-    privatePlace: "the desert",
     photos: [
       { src: tourUnsplash("1624062999726-083e5268525d", 1400), alt: "A white Land Cruiser dune bashing in the desert", cap: "Dune bashing" },
       { src: tourPexels("2417260", 1400), alt: "A 4x4 kicking up sand on orange dunes at sunset", cap: "Desert sunset" },
@@ -729,7 +859,8 @@ const TOURS = {
       { name: "Belly Dance & Tanoura" },
       { name: "Henna Painting" },
       { name: "Traditional Dress" }
-    ]
+    ],
+    included: ["Dune bashing", "Sand boarding", "Camel riding", "BBQ buffet dinner", "Fire shows", "Belly dance and tanoura show", "Henna painting", "Traditional dress for photos"]
   },
   "khorfakkan": {
     name: "Khorfakkan", accent: "City Tour", type: "Private Only",
@@ -747,16 +878,93 @@ const TOURS = {
 // Real guest reviews (copied from the NXT Tours Facebook page, same wording used on the Home page
 // testimonials). `tours` tags which tour a review clearly names, so the tour page can show a
 // review about ITSELF first; reviews with no tag are general and only used as a fallback.
+// mixed: true = a review that also has a complaint; kept for the record but not shown on tour pages.
 const REVIEWS = [
-  { name: "Raca T.", date: "29 Nov 2025", tours: [], text: "Free tea at least please and candies; but overall we had a great time. The tour guide was very accommodating and easy to approach but they need to double check if all the tourist / passengers are in to avoid someone who will be left. Thank you till next time" },
+  { name: "Zeq C.", date: "29 Nov 2025", tours: [], text: "Nasir was a very good host. He always try to keep the itinerary on time." },
+  { name: "Dileepraj K.", date: "9 Nov 2025", tours: [], text: "A very big thank you to NXT Tours... excellent service." },
+  { name: "Raca T.", date: "29 Nov 2025", tours: [], mixed: true, text: "Free tea at least please and candies; but overall we had a great time. The tour guide was very accommodating and easy to approach but they need to double check if all the tourist / passengers are in to avoid someone who will be left. Thank you till next time" },
   { name: "Priya B.", date: "9 Nov 2025", tours: ["abu-dhabi"], text: "I had a wonderful one-day tour in Abu Dhabi. The trip was well-organized and covered some basic spots around the city. Everything went smoothly, and the experience was enjoyable from start to finish. Our guide, Badam, did an excellent job throughout the tour. He explained clearly and shared interesting information, which made the trip even more memorable. Overall, it was a good experience and worth recommending" },
   { name: "Maymay T.", date: "9 Nov 2025", tours: ["abu-dhabi"], text: "Five-star experience from start to finish. Ideal for first-time visitors and repeat travellers wanting a polished, insightful tour. Would book again without hesitation and recommend to friends and family looking to discover Abu Dhabi's beauty and heritage." },
   { name: "Junny E.", date: "25 Oct 2025", tours: [], text: "I enjoyed the entire tour today with Naser Badam. He was very accommodating and made the entire tour an enjoyable one. I would like to tour again hopefully Naser Badam will become our tour guide again when I come back again to visit United Arab Emirates with my friends and relatives." },
-  { name: "Isha K.", date: "8 Jun 2025", tours: [], text: "Thank you for everything, we really do appreciate. It was really fun. We enjoy all the activities? The tours was amazing but you have to tell people about time. Thank you. May Allah bless us all" },
+  { name: "Isha K.", date: "8 Jun 2025", tours: [], mixed: true, text: "Thank you for everything, we really do appreciate. It was really fun. We enjoy all the activities? The tours was amazing but you have to tell people about time. Thank you. May Allah bless us all" },
   { name: "Shailesh S.", date: "7 Jun 2025", tours: [], text: "I recently went with NXT tours and the experience was very smooth overall and well-organized. The guide they provided was knowledgeable and friendly and will recommend to people to plan their trips" },
   { name: "Bi N.", date: "26 May 2025", tours: [], text: "I wanted to express my heartfelt gratitude for the exceptional service your team NXT Tours provided during our recent tour. Your guide was knowledgeable, friendly, and made the experience truly unforgettable. Thank you for your professionalism and dedication. We highly recommend your company to anyone looking for a memorable experience. Keep up great work." },
   { name: "Reny J.", date: "24 May 2025", tours: [], text: "Excellent service. Treated us well and informed about the places and timings well ahead. Mr. Muhammed did a fantastic job throughout our journey. He patiently handled all the passengers. Recommended one" }
 ];
+
+// =========================================================
+// Price sync: fill every price element from the TOURS object so
+// prices live in ONE place. Covers spotlight sections (data-spotlight-tour),
+// homepage wide cards, and tours-page cards (both use data-tour on .tour-card
+// or .tour-wide). The hardcoded HTML values remain as a no-JS fallback.
+// =========================================================
+(function syncPrices() {
+  const fmt = (n) => "AED " + (Number.isInteger(n) ? n : n.toFixed(2));
+
+  document.querySelectorAll("[data-spotlight-tour]").forEach((section) => {
+    const tour = TOURS[section.dataset.spotlightTour];
+    if (!tour) return;
+    const el = section.querySelector(".spotlight-price");
+    if (!el) return;
+    el.innerHTML = fmt(tour.price) + (tour.was ? ' <del class="was">AED ' + tour.was + "</del>" : "");
+  });
+
+  document.querySelectorAll(".tour-card[data-tour], .tour-wide[data-tour]").forEach((card) => {
+    const tour = TOURS[card.dataset.tour];
+    if (!tour) return;
+    // Card photo = the tour page's main photo, so both always match
+    const img = card.querySelector(".tour-img-wrap img");
+    if (img && tour.photos && tour.photos[0]) {
+      img.src = tour.photos[0].src;
+      img.alt = tour.photos[0].alt;
+      img.style.objectPosition = tour.photos[0].pos || "";
+    }
+    const el = card.querySelector(".tour-price");
+    if (!el) return;
+    el.innerHTML = fmt(tour.price) + (tour.was ? ' <del class="was">AED ' + tour.was + "</del>" : "");
+  });
+})();
+
+// Sliders linked to a tour (data-slider-tour="abu-dhabi"): rebuild the slides, dots and counter
+// from that tour's photos, so the homepage slider shows exactly the tour page's photos.
+document.querySelectorAll("[data-slider-tour]").forEach((root) => {
+  const tour = TOURS[root.dataset.sliderTour];
+  if (!tour || !tour.photos || !tour.photos.length) return;
+  const total = tour.photos.length;
+  const stage = root.querySelector("[aria-live]");
+  const dotsEl = root.querySelector(".slider-dots");
+  stage.textContent = "";
+  dotsEl.textContent = "";
+  tour.photos.forEach((p, i) => {
+    const fig = document.createElement("figure");
+    fig.className = "slide" + (i === 0 ? " is-active" : "");
+    fig.setAttribute("role", "group");
+    fig.setAttribute("aria-roledescription", "slide");
+    fig.setAttribute("aria-label", i + 1 + " of " + total);
+    if (i) fig.setAttribute("aria-hidden", "true");
+    const im = document.createElement("img");
+    im.src = p.src;
+    im.alt = p.alt;
+    im.loading = "lazy";
+    im.decoding = "async";
+    if (p.pos) im.style.objectPosition = p.pos;
+    const cap = document.createElement("figcaption");
+    cap.textContent = p.cap;
+    fig.appendChild(im);
+    fig.appendChild(cap);
+    stage.appendChild(fig);
+
+    const dot = document.createElement("button");
+    dot.type = "button";
+    dot.setAttribute("aria-label", "Go to photo " + (i + 1));
+    if (i === 0) dot.className = "is-current";
+    dotsEl.appendChild(dot);
+  });
+  const counter = root.querySelector(".slider-count");
+  if (counter) counter.textContent = "1 / " + total;
+});
+
+document.querySelectorAll("[data-slider]").forEach(initSlider);
 
 if (document.querySelector(".tour-card[data-tour]")) {
   const noMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -832,7 +1040,7 @@ if (document.querySelector(".tour-card[data-tour]")) {
 
   // ---- WhatsApp button: message is rebuilt whenever date / guests change ----
   const updateWhatsApp = () => {
-    const lines = ["Hello NXT Tours! 👋", "I'd like to book the " + tour.name + " " + tour.accent + " (" + money(tour.price) + ")."];
+    const lines = ["Hello NXT Tours!", "I'd like to book the " + tour.name + " " + tour.accent + " (" + money(tour.price) + ")."];
     if (dateEl.value) lines.push("Travel date: " + dateEl.value);
     if (guestsEl.value) lines.push("Guests: " + guestsEl.value);
     waEl.href = "https://wa.me/" + WHATSAPP_NUMBER + "?text=" + encodeURIComponent(lines.join("\n"));
@@ -1105,7 +1313,7 @@ if (document.querySelector(".tour-card[data-tour]")) {
 // =========================================================
 // Hover sparks
 // While the mouse is over a button (.btn-solid, .btn-accent, .btn-outline-dark
-// or the nav "Book on WhatsApp" pill), small pink sparks fly up off it like
+// or the nav "Book on WhatsApp" pill), small orange and crimson sparks fly up off it like
 // embers from lava. When the mouse leaves, no new sparks appear, the ones in the
 // air fade out, and the button is back to normal. On a touch screen a tap
 // gives one short burst instead (there is no hover on a phone).
@@ -1114,7 +1322,8 @@ if (document.querySelector(".tour-card[data-tour]")) {
 // =========================================================
 if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
   const SPARK_BUTTONS = ".btn-solid, .btn-accent, .btn-outline-dark, .nav-links a.nav-cta";
-  const SPARK_COLORS = ["#ff2e88", "#ff5ca6", "#ff8cc4", "#ffb3d9", "#ffd6ea", "#e0206a"];
+  // Brand colours: orange #F39200 and crimson #AA1345 with lighter steps of each
+  const SPARK_COLORS = ["#f39200", "#ffb547", "#ffd08a", "#aa1345", "#d9406e", "#f2c9d6"];
   const SPARK_SIZE = 3; // every spark is exactly this many pixels, small and all the same
   const MAX_SPARKS = 18; // never more than this many in the air at once
   let liveSparks = 0;
@@ -1388,88 +1597,68 @@ if (tourPage) {
     accentEl.textContent = tour.heroTitle.accent;
     titleEl.appendChild(accentEl);
 
-    // ---- Sharing / Private switch ----
-    // tour.price and tour.was are the SHARING prices. A tour can also have privatePrice (+ optional
-    // privateWas) once the client confirms it; until then the Private button says "on request".
-    // Private-only tours (Khorfakkan) have no switch: their price is always the private price.
+    // ---- Prices: sharing price in the crimson box, private prices in their own block below ----
+    // tour.price / tour.was are the SHARING prices (per person). Private prices are per vehicle
+    // (tour.privateTiers) or "on request". Private-only tours (Khorfakkan) show only their own price.
     const privateOnly = tour.type === "Private Only";
-    let mode = privateOnly ? "private" : "sharing";
-    const priceEl = q("[data-tour-price]");
+    q("[data-tour-price-label]").textContent = privateOnly ? "Private tour" : "Sharing tour, per person";
+    q("[data-tour-price]").textContent = money(tour.price);
     const wasEl = q("[data-tour-was]");
     const saveEl = q("[data-tour-save]");
-    const modeBar = q("[data-tour-mode]");
-    const modeBtns = Array.from(modeBar.querySelectorAll("[data-mode]"));
-
-    const currentPrice = () => {
-      if (mode === "sharing" || privateOnly) return { price: tour.price, was: tour.was };
-      if (tour.privateTiers) return { price: tour.privateTiers[0].price, tiers: tour.privateTiers };
-      return tour.privatePrice ? { price: tour.privatePrice, was: tour.privateWas } : null;
-    };
-
-    // Text used in the WhatsApp message (updated below)
-    const modeLabel = () => (privateOnly ? "" : mode === "private" ? " (Private tour)" : " (Sharing tour)");
-
-    const tiersEl = q("[data-tour-tiers]");
-    const priceFromEl = q("[data-tour-price-from]");
-
-    const showPrice = () => {
-      const p = currentPrice();
-      priceEl.classList.toggle("is-text", !p);
-      if (tiersEl) tiersEl.hidden = !(p && p.tiers);
-      if (priceFromEl) priceFromEl.hidden = !(p && p.tiers);
-      if (p && p.tiers) {
-        priceEl.textContent = money(p.price);
-        wasEl.style.display = "none";
-        saveEl.style.display = "none";
-        tiersEl.textContent = p.tiers.map((t) => t.seats + "-seater: " + money(t.price)).join(" · ");
-      } else if (p) {
-        priceEl.textContent = money(p.price);
-        wasEl.style.display = p.was ? "" : "none";
-        saveEl.style.display = p.was ? "" : "none";
-        if (p.was) {
-          wasEl.textContent = money(p.was);
-          saveEl.textContent = "Save " + Math.round((1 - p.price / p.was) * 100) + "%";
-        }
-      } else {
-        priceEl.textContent = "Private price on request";
-        wasEl.style.display = "none";
-        saveEl.style.display = "none";
-      }
-    };
-
-    // One small hint line under the buttons, swapped for whichever mode is selected.
-    // Private tours run a full 24 hours, private to just your own group.
-    const modeNoteEl = q("[data-tour-mode-note]");
-    const modeNotes = {
-      sharing: "Join other travellers, lower price.",
-      private: "Just your group, explore " + (tour.privatePlace || tour.name) + " at your own pace in 24 hours.",
-    };
-    const showModeNote = () => { if (modeNoteEl) modeNoteEl.textContent = modeNotes[mode]; };
-
-    if (privateOnly) {
-      modeBar.hidden = true;
+    if (tour.was) {
+      wasEl.textContent = money(tour.was);
+      saveEl.textContent = "Save " + Math.round((1 - tour.price / tour.was) * 100) + "%";
     } else {
-      showModeNote();
-      modeBtns.forEach((btn) => {
-        btn.addEventListener("click", () => {
-          mode = btn.dataset.mode;
-          modeBtns.forEach((b) => {
-            b.classList.toggle("is-active", b === btn);
-            b.setAttribute("aria-pressed", b === btn ? "true" : "false");
-          });
-          showPrice();
-          showModeNote();
-          updateWhatsApp();
-        });
+      wasEl.hidden = true;
+      saveEl.hidden = true;
+    }
+
+    // Booking options, used by the "Tour option" dropdown and the WhatsApp message.
+    // kind decides the rest of the form: sharing asks for the number of persons, private offers hotel pickup.
+    const sharingText = "Sharing, " + money(tour.price) + " per person";
+    const options = privateOnly
+      ? [{ label: "Private tour, " + money(tour.price), kind: "private", text: "Private tour, " + money(tour.price) }]
+      : [{ label: "Sharing, " + money(tour.price) + " / person", kind: "sharing", text: sharingText }];
+
+    if (!privateOnly) {
+      q("[data-tour-private]").hidden = false;
+      const listEl = q("[data-tour-private-list]");
+      const tiers = tour.privateTiers || [];
+      tiers.forEach((t) => {
+        const li = document.createElement("li");
+        li.innerHTML = "<span></span><strong></strong>";
+        li.querySelector("span").textContent = t.seats + "-seater vehicle";
+        li.querySelector("strong").textContent = money(t.price);
+        listEl.appendChild(li);
+        options.push({ label: "Private " + t.seats + "-seater, " + money(t.price), kind: "private", text: "Private, " + t.seats + "-seater vehicle, " + money(t.price) });
+      });
+      if (!tiers.length) {
+        const li = document.createElement("li");
+        li.innerHTML = "<span>Price</span><strong>On request</strong>";
+        listEl.appendChild(li);
+        options.push({ label: "Private tour, price on request", kind: "private", text: "Private tour (please send me the price)" });
+      }
+      q("[data-tour-private-note]").textContent =
+        (tour.privateNote ? tour.privateNote + ". " : "") + "Just your group, at your own pace.";
+    }
+
+    const optionEl = q("[data-tour-option]");
+    if (options.length > 1) {
+      q("[data-tour-option-field]").hidden = false;
+      options.forEach((o, i) => {
+        const opt = document.createElement("option");
+        opt.value = String(i);
+        opt.textContent = o.label;
+        optionEl.appendChild(opt);
       });
     }
-    showPrice();
+    const chosenOption = () => options[Number(optionEl.value) || 0];
 
     // Quick facts: only things NXT Tours already promises site-wide (same wording as the old popup
     // and the Tours page hero: "Pickup included")
     const facts = [tour.type];
     if (tour.duration) facts.push(tour.duration);
-    facts.push("Hotel & metro pickup included", "English-speaking guides", "Family-friendly");
+    facts.push(tour.pickupFact || "Hotel & metro pickup included", "English-speaking guides", "Family-friendly");
     const factsEl = q("[data-tour-facts]");
     facts.forEach((f) => {
       const li = document.createElement("li");
@@ -1492,8 +1681,8 @@ if (tourPage) {
     const whyItems = [
       {
         icon: '<path d="M3 17V7a1 1 0 0 1 1-1h10.5L21 12.5V17"/><path d="M14.5 6v6.5H21"/><path d="M3 17h1.5M8.5 17h6M18.5 17H21"/><circle cx="6.5" cy="17" r="2"/><circle cx="16.5" cy="17" r="2"/>',
-        title: "Hotel & Metro Pickup",
-        text: "Pickup and drop-off at your hotel or a nearby metro station.",
+        title: tour.pickupCard ? tour.pickupCard.title : "Hotel & Metro Pickup",
+        text: tour.pickupCard ? tour.pickupCard.text : "Pickup and drop-off at your hotel or a nearby metro station.",
         photo: "images/why-hotel-pickup-bus.webp",
       },
       {
@@ -1519,7 +1708,8 @@ if (tourPage) {
       {
         icon: '<path d="M12 22s8-4 8-11V5l-8-3-8 3v6c0 7 8 11 8 11z"/><path d="M9 12l2 2 4-4"/>',
         title: "No Hidden Costs",
-        text: "Every stop is included, nothing extra to pay at the door.",
+        text: tour.costNote || "Every stop is included, nothing extra to pay at the door.",
+        photo: slug === "abu-dhabi" ? "images/why-no-hidden-costs.webp" : undefined,
       },
     ];
     const whyEl = q("[data-tour-why]");
@@ -1638,62 +1828,141 @@ if (tourPage) {
       gridEl.appendChild(tile);
     });
 
-    // ---- Stops / inclusions (only tours that have this data get the section) ----
-    if (tour.stops && tour.stops.length) {
-      const allStops = tour.stops;
-      const withPhoto = allStops.filter((s) => s.src);
-      const nameOnly = allStops.filter((s) => !s.src).map((s) => s.name);
+    // ---- "Your Day, Hour by Hour": vertical timeline. A crimson line fills as you scroll, each
+    // dot lights up once you pass it, and each card slides in as it comes into view. ----
+    if (tour.timeline && tour.timeline.length) {
+      const ICON_PIN = '<path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0Z"/><circle cx="12" cy="10" r="3"/>';
+      const ICON_VAN = '<path d="M3 17V7a1 1 0 0 1 1-1h10.5L21 12.5V17"/><path d="M14.5 6v6.5H21"/><path d="M3 17h1.5M8.5 17h6M18.5 17H21"/><circle cx="6.5" cy="17" r="2"/><circle cx="16.5" cy="17" r="2"/>';
+      const ICON_CLOCK = '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/>';
+      const svg = (path) => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + path + "</svg>";
 
-      const wrap = document.createElement("div");
-      const h = document.createElement("h2");
-      h.textContent = (tour.stopsTitle || "Stops on this tour") + " (" + allStops.length + ")";
-      wrap.appendChild(h);
+      const section = document.createElement("section");
+      section.className = "tl";
+      section.innerHTML =
+        '<h2>Your Day, <span class="accent-word">Hour by Hour</span></h2>' +
+        '<p class="tl-sub"></p>' +
+        '<div class="tl-track"><div class="tl-line" aria-hidden="true"><span class="tl-line-fill"></span></div><ol class="tl-list"></ol></div>';
+      section.querySelector(".tl-sub").textContent =
+        (tour.duration ? tour.duration + ". " : "") + "Timings can shift a little with traffic and group size.";
+      const listEl = section.querySelector(".tl-list");
 
-      const grid = document.createElement("div");
-      grid.className = "tm-stops";
-      withPhoto.forEach((s) => {
-        const fig = document.createElement("figure");
-        const im = document.createElement("img");
-        im.src = s.src;
-        im.alt = s.alt || s.name;
-        im.loading = "lazy";
-        im.decoding = "async";
-        im.width = 1000;
-        im.height = 667;
-        const cap = document.createElement("figcaption");
-        cap.textContent = s.name;
-        fig.appendChild(im);
-        fig.appendChild(cap);
-        grid.appendChild(fig);
+      tour.timeline.forEach((s) => {
+        const travel = s.kind === "travel";
+        const li = document.createElement("li");
+        li.className = "tl-item" + (travel ? " is-travel" : "");
+        const photo = travel
+          ? ""
+          : s.src
+          ? '<div class="tl-photo"><img alt="" loading="lazy" decoding="async" /></div>'
+          : '<div class="tl-photo is-empty"><img src="images/logo-mark.png" alt="" width="56" height="56" /></div>';
+        li.innerHTML =
+          '<span class="tl-dot">' + svg(travel ? ICON_VAN : ICON_PIN) + "</span>" +
+          '<div class="tl-card">' + photo +
+            '<div class="tl-body">' +
+              '<span class="tl-time"></span>' +
+              "<h3></h3>" +
+              (s.place ? '<p class="tl-place"></p>' : "") +
+              (s.dur ? '<span class="tl-dur">' + svg(ICON_CLOCK) + "<span></span></span>" : "") +
+              '<p class="tl-text"></p>' +
+            "</div>" +
+          "</div>";
+        li.querySelector(".tl-time").textContent = s.time;
+        li.querySelector("h3").textContent = s.title;
+        if (s.place) li.querySelector(".tl-place").textContent = s.place;
+        if (s.dur) li.querySelector(".tl-dur span").textContent = s.dur;
+        li.querySelector(".tl-text").textContent = s.text;
+        if (s.src) {
+          const im = li.querySelector(".tl-photo img");
+          im.src = s.src;
+          im.alt = s.alt || s.title;
+        }
+        listEl.appendChild(li);
       });
-      wrap.appendChild(grid);
 
-      if (nameOnly.length) {
-        const label = document.createElement("p");
-        label.className = "tm-morestops-label";
-        label.textContent = tour.stopsTitle ? "Included:" : "Also on the route:";
-        wrap.appendChild(label);
-        const ul = document.createElement("ul");
-        ul.className = "tm-morestops";
-        nameOnly.forEach((name) => {
-          const li = document.createElement("li");
-          li.textContent = name;
-          ul.appendChild(li);
+      // Pickup points: a fold-out table so the long list does not push the rest of the page down
+      if (tour.pickupAreas && tour.pickupAreas.length) {
+        const count = tour.pickupAreas.reduce((n, a) => n + a.points.length, 0);
+        const det = document.createElement("details");
+        det.className = "tl-pickup";
+        det.innerHTML =
+          "<summary>" + svg(ICON_VAN) + "<span></span></summary>" +
+          '<p class="tl-pickup-note"></p>' +
+          '<table><thead><tr><th scope="col">Pickup point</th><th scope="col">Time</th></tr></thead><tbody></tbody></table>';
+        det.querySelector("summary span").textContent = "See all " + count + " pickup points and times, by area";
+        det.querySelector(".tl-pickup-note").textContent = tour.pickupNote || "";
+        const tbody = det.querySelector("tbody");
+        tour.pickupAreas.forEach(({ area, points }) => {
+          const head = document.createElement("tr");
+          head.className = "tl-pickup-area";
+          head.innerHTML = '<th colspan="2" scope="rowgroup"></th>';
+          head.firstChild.textContent = area;
+          tbody.appendChild(head);
+          points.forEach(([place, time]) => {
+            const tr = document.createElement("tr");
+            tr.innerHTML = "<td></td><td></td>";
+            tr.children[0].textContent = place;
+            tr.children[1].textContent = time;
+            tbody.appendChild(tr);
+          });
         });
-        wrap.appendChild(ul);
+        section.appendChild(det);
       }
-      q("[data-tour-stops]").appendChild(wrap);
+
+      q("[data-tour-timeline]").appendChild(section);
+
+      const items = Array.from(listEl.children);
+      const track = section.querySelector(".tl-track");
+      if (noMotion || !("IntersectionObserver" in window)) {
+        track.classList.add("is-static");
+      } else {
+        track.classList.add("is-animated");
+        const io = new IntersectionObserver(
+          (entries) => {
+            entries.forEach((e) => {
+              if (!e.isIntersecting) return;
+              e.target.classList.add("is-in");
+              io.unobserve(e.target);
+            });
+          },
+          { threshold: 0.2, rootMargin: "0px 0px -8% 0px" }
+        );
+        items.forEach((li) => io.observe(li));
+
+        // Line fill + dots follow a point 60% down the screen
+        const fill = section.querySelector(".tl-line-fill");
+        let ticking = false;
+        const update = () => {
+          ticking = false;
+          const marker = window.innerHeight * 0.6;
+          const box = track.getBoundingClientRect();
+          const progress = Math.min(1, Math.max(0, (marker - box.top) / box.height));
+          fill.style.transform = "scaleY(" + progress + ")";
+          items.forEach((li) => {
+            const dot = li.querySelector(".tl-dot").getBoundingClientRect();
+            li.classList.toggle("is-reached", dot.top + dot.height / 2 <= marker);
+          });
+        };
+        const onScroll = () => {
+          if (!ticking) {
+            ticking = true;
+            requestAnimationFrame(update);
+          }
+        };
+        window.addEventListener("scroll", onScroll, { passive: true });
+        window.addEventListener("resize", onScroll);
+        update();
+      }
     }
 
     // ---- Optional extra sections: only show up once the client confirms the real details ----
-    const extraSection = (title, content) => {
+    const extraSection = (title, content, mod) => {
       const wrap = document.createElement("div");
       const h = document.createElement("h2");
       h.textContent = title;
       wrap.appendChild(h);
       if (Array.isArray(content)) {
         const ul = document.createElement("ul");
-        ul.className = "tm-points";
+        ul.className = "tm-points" + (mod ? " " + mod : "");
         content.forEach((text) => {
           const li = document.createElement("li");
           li.textContent = text;
@@ -1712,63 +1981,638 @@ if (tourPage) {
     if (tour.pickup) extraEl.appendChild(extraSection("Pickup", tour.pickup));
     if (tour.itinerary) extraEl.appendChild(extraSection("Itinerary", tour.itinerary));
     if (tour.included) extraEl.appendChild(extraSection("What's Included", tour.included));
-    if (tour.notIncluded) extraEl.appendChild(extraSection("Not Included", tour.notIncluded));
+    if (tour.notIncluded) extraEl.appendChild(extraSection("Not Included", tour.notIncluded, "is-no"));
+    if (tour.notes) extraEl.appendChild(extraSection("Important Notes", tour.notes, "is-info"));
     if (tour.bring) extraEl.appendChild(extraSection("What to Bring", tour.bring));
     if (tour.childPrice) extraEl.appendChild(extraSection("Children", tour.childPrice));
     if (tour.cancellation) extraEl.appendChild(extraSection("Cancellation", tour.cancellation));
 
-    // ---- Reviews: real Facebook reviews, this tour's own reviews first, then general ones, up to 2 ----
-    const matched = REVIEWS.filter((r) => r.tours.includes(slug));
-    const general = REVIEWS.filter((r) => !r.tours.includes(slug));
-    const chosen = matched.concat(general).slice(0, 2);
-    if (chosen.length) {
-      const reviewsEl = q("[data-tour-reviews]");
-      const heading = document.createElement("h2");
-      heading.textContent = "What Our Guests Say";
-      reviewsEl.appendChild(heading);
-      const grid = document.createElement("div");
-      grid.className = "tour-reviews-grid";
-      chosen.forEach((r) => {
-        const card = document.createElement("div");
-        card.className = "card tour-review-card";
-        card.innerHTML =
-          '<div class="review-quote" aria-hidden="true">&rdquo;</div>' +
-          '<div class="review-stars" aria-hidden="true">&#9733;&#9733;&#9733;&#9733;&#9733;</div>' +
-          "<p></p>" +
-          '<div class="tour-review-name"></div>' +
-          '<div class="tour-review-source"></div>';
-        card.querySelector("p").textContent = r.text;
-        card.querySelector(".tour-review-name").textContent = r.name;
-        card.querySelector(".tour-review-source").textContent = "Facebook review, " + r.date;
-        grid.appendChild(card);
+    // ---- Reviews: real Facebook recommendations. This tour's own reviews first, then general
+    // ones; mixed reviews (with a complaint) are left out. 4 show at first, "Show more" reveals the
+    // rest. Facebook has no star ratings, so cards say "Recommends NXT Tours" instead of stars. ----
+    const FB_REVIEWS_URL = "https://www.facebook.com/toursnxt/reviews";
+    const FB_SCORE = { pct: 98, count: 68 }; // from the Facebook page, 2026-10-04
+    const ICON_FB = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M9.1 23.7v-8H6.6v-3.6h2.5v-1.6c0-4.1 1.8-6 5.9-6 .8 0 2.1.2 2.6.3v3.3h-1.4c-1.4 0-1.9.5-1.9 1.9v2.1h3.3l-.6 3.6h-2.7v8.2C18 23.2 22 18.6 22 13c0-6.1-4.9-11-10-11S2 6.9 2 13c0 5.6 3.9 10.2 9.1 10.7"/></svg>';
+    const ICON_THUMB = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 10v11H3V10h4zM7 10l4-8a3 3 0 0 1 3 3v4h5.5a2 2 0 0 1 2 2.3l-1.4 8A2 2 0 0 1 18.1 21H7"/></svg>';
+    const tourName = tour.name + " " + tour.accent;
+    const good = REVIEWS.filter((r) => !r.mixed);
+    const list = good.filter((r) => r.tours.includes(slug)).concat(good.filter((r) => !r.tours.includes(slug)));
+    const reviewsEl = q("[data-tour-reviews]");
+    const rv = document.createElement("div");
+    rv.className = "rv";
+    rv.innerHTML =
+      '<div class="rv-head">' +
+        '<div><h2>What Our Guests Say</h2><p class="rv-sub">Real reviews from travellers on our Facebook page.</p></div>' +
+        '<a class="rv-score" target="_blank" rel="noopener">' +
+          '<span class="rv-score-fb">' + ICON_FB + "</span>" +
+          '<span><strong></strong><small></small></span>' +
+        "</a>" +
+      "</div>" +
+      '<div class="rv-grid"></div>' +
+      '<div class="rv-actions">' +
+        '<button type="button" class="rv-more"></button>' +
+        '<a class="btn btn-outline-dark" target="_blank" rel="noopener">Read all reviews on Facebook</a>' +
+        '<button type="button" class="btn btn-solid" data-rv-write>Write a review</button>' +
+      "</div>";
+    const score = rv.querySelector(".rv-score");
+    score.href = FB_REVIEWS_URL;
+    score.querySelector("strong").textContent = FB_SCORE.pct + "% recommend us";
+    score.querySelector("small").textContent = FB_SCORE.count + " reviews on Facebook";
+    rv.querySelector(".rv-actions a").href = FB_REVIEWS_URL;
+
+    const grid = rv.querySelector(".rv-grid");
+    const moreBtn = rv.querySelector(".rv-more");
+    const SHOW = 4;
+    // r: { name, date, text, source: "facebook" | "website", rating?, tagged? }
+    const makeCard = (r, extra) => {
+      const card = document.createElement("article");
+      card.className = "rv-card" + (extra ? " is-extra" : "");
+      const website = r.source === "website";
+      card.innerHTML =
+        '<div class="rv-top">' +
+          '<span class="rv-avatar" aria-hidden="true"></span>' +
+          '<span class="rv-who"><strong></strong><small></small></span>' +
+          (website ? '<span class="rv-site">Website</span>' : '<span class="rv-fb" title="Facebook review">' + ICON_FB + "</span>") +
+        "</div>" +
+        (website
+          ? '<p class="rv-rating" aria-label="' + r.rating + ' out of 5 stars">' + "★".repeat(r.rating) + "<span>" + "★".repeat(5 - r.rating) + "</span></p>"
+          : '<p class="rv-badge">' + ICON_THUMB + "Recommends NXT Tours</p>") +
+        '<p class="rv-text"></p>' +
+        '<button type="button" class="rv-toggle" hidden>Read more</button>';
+      card.querySelector(".rv-avatar").textContent = r.name.charAt(0).toUpperCase();
+      card.querySelector(".rv-who strong").textContent = r.name;
+      card.querySelector(".rv-who small").textContent = r.date + (r.tagged ? " · " + tourName : "");
+      card.querySelector(".rv-text").textContent = r.text;
+      return card;
+    };
+    let allReviews = list.map((r) => ({ name: r.name, date: r.date, text: r.text, source: "facebook", tagged: r.tours.includes(slug) }));
+    const renderReviews = () => {
+      grid.textContent = "";
+      const showAll = rv.classList.contains("show-all");
+      allReviews.forEach((r, i) => grid.appendChild(makeCard(r, i >= SHOW)));
+      const moreCount = Math.max(0, allReviews.length - SHOW);
+      moreBtn.hidden = !moreCount || showAll;
+      moreBtn.textContent = "Show " + moreCount + " more review" + (moreCount === 1 ? "" : "s");
+      requestAnimationFrame(clampCheck);
+    };
+    moreBtn.addEventListener("click", () => {
+      rv.classList.add("show-all");
+      moreBtn.hidden = true;
+      clampCheck();
+    });
+    reviewsEl.appendChild(rv);
+
+    // Long reviews are cut to 5 lines with a "Read more" toggle
+    function clampCheck() {
+      grid.querySelectorAll(".rv-card").forEach((card) => {
+        const text = card.querySelector(".rv-text");
+        const btn = card.querySelector(".rv-toggle");
+        if (card.classList.contains("is-open") || !card.offsetParent) return;
+        btn.hidden = text.scrollHeight <= text.clientHeight + 2;
       });
-      reviewsEl.appendChild(grid);
+    }
+    grid.addEventListener("click", (e) => {
+      const btn = e.target.closest(".rv-toggle");
+      if (!btn) return;
+      const card = btn.closest(".rv-card");
+      card.classList.toggle("is-open");
+      btn.textContent = card.classList.contains("is-open") ? "Show less" : "Read more";
+    });
+    window.addEventListener("resize", clampCheck);
+    renderReviews();
+
+    // Approved reviews written on the website (newest first) go before the Facebook ones
+    if (BACKEND.key) {
+      fetch(BACKEND.url + "/rest/v1/reviews?select=name,rating,text,created_at&tour_slug=eq." + encodeURIComponent(slug) + "&order=created_at.desc&limit=50", {
+        headers: { apikey: BACKEND.key },
+      })
+        .then((r) => (r.ok ? r.json() : []))
+        .then((rows) => {
+          if (!Array.isArray(rows) || !rows.length) return;
+          const site = rows.map((x) => ({
+            name: x.name,
+            rating: Math.min(5, Math.max(1, Number(x.rating) || 5)),
+            text: x.text,
+            source: "website",
+            tagged: true,
+            date: new Date(x.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }),
+          }));
+          allReviews = site.concat(allReviews);
+          renderReviews();
+        })
+        .catch((err) => console.warn("Website reviews not loaded", err));
     }
 
-    // ---- Booking bar: WhatsApp message rebuilt live from the date/guests fields ----
+    // ---- "Write a review": saved on the website (shown after the team approves it in Supabase).
+    // Facebook is offered as a second option. Without a backend it falls back to WhatsApp. ----
+    const rvDialog = q("[data-rv-dialog]");
+    const rvForm = q("[data-rv-form]");
+    const rvStars = Array.from(rvDialog.querySelectorAll("[data-rv-star]"));
+    const rvError = q("[data-rv-error]");
+    const rvThanks = q("[data-rv-thanks]");
+    const rvSubmit = rvForm.querySelector("[type=submit]");
+    let rvRating = 0;
+    q("[data-rv-fb]").href = FB_REVIEWS_URL;
+    q("[data-rv-tour]").value = tourName;
+    const paintStars = (n) =>
+      rvStars.forEach((s, i) => {
+        s.classList.toggle("is-on", i < n);
+        s.setAttribute("aria-checked", i + 1 === rvRating ? "true" : "false");
+      });
+    rvStars.forEach((s, i) => {
+      s.addEventListener("click", () => {
+        rvRating = i + 1;
+        paintStars(rvRating);
+        rvError.hidden = true;
+      });
+      s.addEventListener("mouseenter", () => paintStars(i + 1));
+      s.addEventListener("mouseleave", () => paintStars(rvRating));
+    });
+    const resetReviewForm = () => {
+      rvForm.reset();
+      q("[data-rv-tour]").value = tourName;
+      rvRating = 0;
+      paintStars(0);
+      rvError.hidden = true;
+      rvForm.hidden = false;
+      rvThanks.hidden = true;
+    };
+    rv.querySelector("[data-rv-write]").addEventListener("click", () => {
+      resetReviewForm();
+      rvDialog.showModal();
+      document.body.classList.add("modal-open");
+    });
+    q("[data-rv-close]").addEventListener("click", () => rvDialog.close());
+    q("[data-rv-thanks-close]").addEventListener("click", () => rvDialog.close());
+    rvDialog.addEventListener("click", (e) => {
+      if (e.target === rvDialog) rvDialog.close();
+    });
+    rvDialog.addEventListener("close", () => document.body.classList.remove("modal-open"));
+    rvForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const name = q("[data-rv-name]").value.trim();
+      const text = q("[data-rv-text]").value.trim();
+      const missing = !name ? "Please enter your name." : !rvRating ? "Please choose a star rating." : text.length < 3 ? "Please write a few words about your trip." : "";
+      if (missing) {
+        rvError.textContent = missing;
+        rvError.hidden = false;
+        return;
+      }
+      if (q("[data-rv-trap]").value) {
+        rvForm.hidden = true;
+        rvThanks.hidden = false;
+        return;
+      }
+      if (!BACKEND.key) {
+        const lines = ["Hello NXT Tours! Here is my review.", "Name: " + name, "Tour: " + tourName, "Rating: " + rvRating + " out of 5", "Review: " + text];
+        window.open("https://wa.me/" + WHATSAPP_NUMBER + "?text=" + encodeURIComponent(lines.join("\n")), "_blank", "noopener");
+        rvDialog.close();
+        return;
+      }
+      rvSubmit.disabled = true;
+      const label = rvSubmit.textContent;
+      rvSubmit.textContent = "Sending...";
+      try {
+        const res = await fetch(BACKEND.url + "/rest/v1/reviews", {
+          method: "POST",
+          headers: { apikey: BACKEND.key, "Content-Type": "application/json", Prefer: "return=minimal" },
+          body: JSON.stringify({ tour_slug: slug, tour_name: tourName, name: name.slice(0, 60), rating: rvRating, text: text.slice(0, 1000) }),
+        });
+        if (!res.ok) throw new Error("review " + res.status);
+        rvForm.hidden = true;
+        rvThanks.hidden = false;
+      } catch (err) {
+        console.error("Review not sent", err);
+        rvError.textContent = "Sorry, your review could not be sent. Please try again in a moment.";
+        rvError.hidden = false;
+      } finally {
+        rvSubmit.disabled = false;
+        rvSubmit.textContent = label;
+      }
+    });
+
+    // ---- Booking form: name, mobile (optional), tour option, date, pickup, persons (sharing only).
+    // "Book on WhatsApp" opens one ready-made message with all of it; nothing is stored anywhere. ----
+    const nameEl = q("[data-tour-name]");
+    const emailEl = q("[data-tour-email]");
+    const trapEl = q("[data-tour-trap]");
+    const phoneEl = q("[data-tour-phone]");
     const dateEl = q("[data-tour-date]");
+    const pickupTextEl = q("[data-tour-pickup-text]");
+    const hotelField = q("[data-tour-hotel-field]");
+    const hotelEl = q("[data-tour-hotel]");
+    const guestsField = q("[data-tour-guests-field]");
     const guestsEl = q("[data-tour-guests]");
+    const errorEl = q("[data-tour-error]");
     const waEl = q("[data-tour-wa]");
-    const now = new Date();
-    dateEl.min = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+    const isPrivate = () => chosenOption().kind === "private";
+
+    // ---- Travel date: a swipeable row of days starting TOMORROW (no same-day bookings), one
+    // year ahead. Arrows scroll it, the month label follows the first visible day, the chosen
+    // day turns crimson. The "Calendar" button opens the same range as a month grid. ----
+    const track = q("[data-date-track]");
+    const monthEl = q("[data-date-month]");
+    const DAYS = 365;
+    const iso = (d) => d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+    const start = new Date();
+    start.setHours(0, 0, 0, 0);
+    start.setDate(start.getDate() + 1);
+    const last = new Date(start);
+    last.setDate(start.getDate() + DAYS - 1);
+    const dayBtns = [];
+    for (let i = 0; i < DAYS; i++) {
+      const d = new Date(start);
+      d.setDate(start.getDate() + i);
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "date-day";
+      b.setAttribute("role", "option");
+      b.setAttribute("aria-selected", "false");
+      b.dataset.date = iso(d);
+      b.dataset.month = d.toLocaleDateString("en-GB", { month: "long", year: "numeric" });
+      const top = i === 0 ? "Tmrw" : d.toLocaleDateString("en-GB", { weekday: "short" });
+      b.innerHTML = '<span class="date-dow"></span><span class="date-num"></span><span class="date-mon"></span>';
+      b.children[0].textContent = top;
+      b.children[1].textContent = d.getDate();
+      b.children[2].textContent = d.toLocaleDateString("en-GB", { month: "short" });
+      b.setAttribute("aria-label", d.toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long", year: "numeric" }));
+      if (d.getDay() === 5 || d.getDay() === 6) b.classList.add("is-weekend");
+      b.addEventListener("click", () => pickDate(b));
+      track.appendChild(b);
+      dayBtns.push(b);
+    }
+    const pickDate = (b) => {
+      dayBtns.forEach((x) => {
+        x.classList.toggle("is-selected", x === b);
+        x.setAttribute("aria-selected", x === b ? "true" : "false");
+      });
+      dateEl.value = b.dataset.date;
+      q("[data-date-strip]").classList.remove("is-invalid");
+      onChange();
+    };
+    const updateMonth = () => {
+      const step = dayBtns[1].offsetLeft - dayBtns[0].offsetLeft || 1;
+      const first = dayBtns[Math.min(DAYS - 1, Math.max(0, Math.round(track.scrollLeft / step)))];
+      monthEl.textContent = first.dataset.month;
+      q("[data-date-prev]").disabled = track.scrollLeft < 4;
+      q("[data-date-next]").disabled = track.scrollLeft + track.clientWidth >= track.scrollWidth - 4;
+    };
+    const page = (dir) => track.scrollBy({ left: dir * track.clientWidth * 0.8, behavior: "smooth" });
+    q("[data-date-prev]").addEventListener("click", () => page(-1));
+    q("[data-date-next]").addEventListener("click", () => page(1));
+    track.addEventListener("scroll", () => requestAnimationFrame(updateMonth), { passive: true });
+    // Keyboard: left/right moves the chosen day
+    track.addEventListener("keydown", (e) => {
+      if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
+      e.preventDefault();
+      const cur = dayBtns.findIndex((b) => b.classList.contains("is-selected"));
+      const next = Math.min(DAYS - 1, Math.max(0, cur + (e.key === "ArrowRight" ? 1 : -1)));
+      pickDate(dayBtns[next]);
+      showDay(dayBtns[next], true);
+    });
+    // Scroll the row (only the row, never the page) so a day is in view
+    function showDay(b, smooth) {
+      track.scrollTo({ left: Math.max(0, b.offsetLeft - track.offsetLeft - 4), behavior: smooth ? "smooth" : "auto" });
+    }
+    updateMonth();
+
+    // ---- Full calendar popup: month grid, Monday first. Days before tomorrow or after the
+    // last bookable day are greyed out. Picking a day selects it in the row too. ----
+    const calDialog = q("[data-cal-dialog]");
+    const calGrid = q("[data-cal-grid]");
+    const calMonth = q("[data-cal-month]");
+    const calPicked = q("[data-cal-picked]");
+    const calPrev = q("[data-cal-prev]");
+    const calNext = q("[data-cal-next]");
+    let calView = new Date(start.getFullYear(), start.getMonth(), 1);
+
+    const renderCal = () => {
+      calMonth.textContent = calView.toLocaleDateString("en-GB", { month: "long", year: "numeric" });
+      calGrid.textContent = "";
+      const lead = (calView.getDay() + 6) % 7; // Monday = 0
+      for (let i = 0; i < lead; i++) calGrid.appendChild(document.createElement("span"));
+      const daysIn = new Date(calView.getFullYear(), calView.getMonth() + 1, 0).getDate();
+      for (let n = 1; n <= daysIn; n++) {
+        const d = new Date(calView.getFullYear(), calView.getMonth(), n);
+        const b = document.createElement("button");
+        b.type = "button";
+        b.className = "cal-day";
+        b.textContent = n;
+        b.dataset.date = iso(d);
+        b.setAttribute("aria-label", d.toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long", year: "numeric" }));
+        if (d < start || d > last) {
+          b.disabled = true;
+        } else {
+          if (iso(d) === dateEl.value) b.classList.add("is-selected");
+          if (d.getDay() === 5 || d.getDay() === 6) b.classList.add("is-weekend");
+          b.addEventListener("click", () => {
+            const chip = dayBtns.find((x) => x.dataset.date === b.dataset.date);
+            pickDate(chip);
+            showDay(chip, false);
+            updateMonth();
+            calDialog.close();
+          });
+        }
+        if (iso(d) === iso(new Date())) b.classList.add("is-today");
+        calGrid.appendChild(b);
+      }
+      calPrev.disabled = calView <= new Date(start.getFullYear(), start.getMonth(), 1);
+      calNext.disabled = calView >= new Date(last.getFullYear(), last.getMonth(), 1);
+      calPicked.textContent = dateEl.value ? "Selected: " + niceDate(dateEl.value) : "";
+    };
+
+    q("[data-cal-open]").addEventListener("click", () => {
+      const base = dateEl.value ? new Date(dateEl.value + "T00:00:00") : start;
+      calView = new Date(base.getFullYear(), base.getMonth(), 1);
+      renderCal();
+      calDialog.showModal();
+      document.body.classList.add("modal-open");
+      (calGrid.querySelector(".is-selected") || calGrid.querySelector(".cal-day:not(:disabled)")).focus();
+    });
+    calPrev.addEventListener("click", () => {
+      calView = new Date(calView.getFullYear(), calView.getMonth() - 1, 1);
+      renderCal();
+    });
+    calNext.addEventListener("click", () => {
+      calView = new Date(calView.getFullYear(), calView.getMonth() + 1, 1);
+      renderCal();
+    });
+    q("[data-cal-close]").addEventListener("click", () => calDialog.close());
+    calDialog.addEventListener("click", (e) => {
+      if (e.target === calDialog) calDialog.close();
+    });
+    calDialog.addEventListener("close", () => document.body.classList.remove("modal-open"));
+
+    // ---- Pickup point: a picker with search and the points grouped by area. Hotel pickup only
+    // on private tours; "Not sure" lets the team suggest one. ----
+    const areas = tour.pickupAreas || [];
+    const hasList = areas.length > 0;
+    const trigger = q("[data-pickup-open]");
+    const triggerLabel = q("[data-pickup-label]");
+    const dialog = q("[data-pickup-dialog]");
+    const body = q("[data-pickup-body]");
+    const search = q("[data-pickup-search]");
+    trigger.hidden = !hasList;
+    pickupTextEl.hidden = hasList;
+    // Inline display too, so an old cached stylesheet can never show the wrong pickup box
+    trigger.style.display = hasList ? "" : "none";
+    pickupTextEl.style.display = hasList ? "none" : "";
+
+    let pickup = null; // { type: "point", area, place, time } | { type: "hotel" } | { type: "help" }
+    const ICON_CHECK = '<svg class="pickup-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
+    const same = (a, b) => a && b && a.type === b.type && a.place === b.place;
+
+    const row = (choice, title, sub, extraClass) => {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "pickup-row" + (extraClass ? " " + extraClass : "") + (same(choice, pickup) ? " is-selected" : "");
+      b.innerHTML = '<span class="pickup-row-main"><span class="pickup-row-title"></span><span class="pickup-row-sub"></span></span>' + ICON_CHECK;
+      b.querySelector(".pickup-row-title").textContent = title;
+      b.querySelector(".pickup-row-sub").textContent = sub;
+      b.addEventListener("click", () => choosePickup(choice));
+      return b;
+    };
+
+    const renderPickup = () => {
+      const term = search.value.trim().toLowerCase();
+      body.textContent = "";
+      if (isPrivate() && !term) {
+        body.appendChild(row({ type: "hotel" }, "Pick me up from my hotel", "Private tours only. You'll type the hotel name next.", "is-special"));
+      }
+      let shown = 0;
+      areas.forEach(({ area, points }) => {
+        const areaHit = area.toLowerCase().includes(term);
+        const list = points.filter(([place]) => !term || areaHit || place.toLowerCase().includes(term));
+        if (!list.length) return;
+        shown += list.length;
+        const group = document.createElement("div");
+        group.className = "pickup-group";
+        const h = document.createElement("h4");
+        h.textContent = area;
+        group.appendChild(h);
+        list.forEach(([place, time]) => group.appendChild(row({ type: "point", area, place, time }, place, "Pickup " + time)));
+        body.appendChild(group);
+      });
+      if (term && !shown) {
+        const p = document.createElement("p");
+        p.className = "pickup-empty";
+        p.textContent = "No pickup point matches “" + search.value.trim() + "”. Choose the option below and our team will help.";
+        body.appendChild(p);
+      }
+      body.appendChild(row({ type: "help" }, "Not sure? Our team will suggest one", "We'll message you the best pickup point for where you're staying.", "is-help"));
+    };
+
+    const pickupSummary = () => {
+      if (!pickup) return "";
+      if (pickup.type === "hotel") return "My hotel (private tour)";
+      if (pickup.type === "help") return "Not sure, team will suggest";
+      return pickup.place + " · " + pickup.time;
+    };
+
+    const choosePickup = (choice) => {
+      pickup = choice;
+      triggerLabel.textContent = pickupSummary();
+      trigger.classList.add("has-value");
+      trigger.classList.remove("is-invalid");
+      hotelField.hidden = pickup.type !== "hotel";
+      dialog.close();
+      if (pickup.type === "hotel") hotelEl.focus();
+      onChange();
+      fitSticky();
+    };
+
+    const resetPickup = () => {
+      pickup = null;
+      triggerLabel.textContent = "Choose your pickup point";
+      trigger.classList.remove("has-value");
+      hotelField.hidden = true;
+    };
+
+    trigger.addEventListener("click", () => {
+      search.value = "";
+      renderPickup();
+      dialog.showModal();
+      body.scrollTop = 0;
+      const sel = body.querySelector(".is-selected");
+      if (sel) sel.scrollIntoView({ block: "center" });
+      if (window.matchMedia("(min-width: 700px)").matches) search.focus();
+    });
+    search.addEventListener("input", renderPickup);
+    q("[data-pickup-close]").addEventListener("click", () => dialog.close());
+    dialog.addEventListener("click", (e) => {
+      if (e.target === dialog) dialog.close();
+    });
+    dialog.addEventListener("close", () => document.body.classList.remove("modal-open"));
+    dialog.addEventListener("cancel", () => document.body.classList.remove("modal-open"));
+    trigger.addEventListener("click", () => document.body.classList.add("modal-open"));
+
+    // Show/hide the parts of the form that depend on the tour option
+    const syncForm = () => {
+      if (pickup && pickup.type === "hotel" && !isPrivate()) resetPickup();
+      guestsField.hidden = isPrivate();
+    };
+
+    const pickupText = () => {
+      if (!hasList) return pickupTextEl.value.trim();
+      if (!pickup) return "";
+      if (pickup.type === "hotel") return hotelEl.value.trim() ? hotelEl.value.trim() + " (hotel)" : "";
+      if (pickup.type === "help") return "Not sure, please suggest a pickup point";
+      return pickup.place + ", " + pickup.time;
+    };
+
+    const niceDate = (v) =>
+      new Date(v + "T00:00:00").toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short", year: "numeric" });
 
     const updateWhatsApp = () => {
-      const p = currentPrice();
-      const priceText = p && p.tiers
-        ? " (" + p.tiers.map((t) => t.seats + "-seater " + money(t.price)).join(" or ") + ")"
-        : p
-        ? ", " + money(p.price)
-        : ". Please send me the private tour price";
-      const lines = [
-        "Hello NXT Tours! 👋",
-        "I'd like to book the " + tour.name + " " + tour.accent + modeLabel() + priceText + ".",
-      ];
-      if (dateEl.value) lines.push("Travel date: " + dateEl.value);
-      if (guestsEl.value) lines.push("Guests: " + guestsEl.value);
+      const lines = ["Hello NXT Tours!", "I'd like to book the " + tour.name + " " + tour.accent + "."];
+      if (nameEl.value.trim()) lines.push("Name: " + nameEl.value.trim());
+      if (emailEl.value.trim()) lines.push("Email: " + emailEl.value.trim());
+      if (phoneEl.value.trim()) lines.push("Mobile: " + phoneEl.value.trim());
+      lines.push("Tour option: " + chosenOption().text);
+      if (dateEl.value) lines.push("Date: " + niceDate(dateEl.value));
+      if (pickupText()) lines.push("Pickup: " + pickupText());
+      if (!isPrivate() && guestsEl.value) lines.push("Persons: " + guestsEl.value);
       waEl.href = "https://wa.me/" + WHATSAPP_NUMBER + "?text=" + encodeURIComponent(lines.join("\n"));
     };
-    dateEl.addEventListener("input", updateWhatsApp);
-    guestsEl.addEventListener("input", updateWhatsApp);
+
+    // Required: name, email, date, pickup (and the hotel name if "My hotel"), persons on sharing.
+    // Returns [element to highlight, message].
+    const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+    const firstMissing = () => {
+      if (!nameEl.value.trim()) return [nameEl, "Please enter your name."];
+      if (!EMAIL_RE.test(emailEl.value.trim())) return [emailEl, "Please enter a valid email, we send your booking details there."];
+      if (!dateEl.value) return [q("[data-date-strip]"), "Please choose your travel date."];
+      if (hasList && !pickup) return [trigger, "Please choose a pickup point."];
+      if (hasList && pickup.type === "hotel" && !hotelEl.value.trim()) return [hotelEl, "Please enter your hotel name."];
+      if (!hasList && !pickupTextEl.value.trim()) return [pickupTextEl, "Please enter your hotel or pickup area."];
+      if (!isPrivate() && !(Number(guestsEl.value) >= 1)) return [guestsEl, "Please enter the number of persons."];
+      return null;
+    };
+
+    const showError = (el, message) => {
+      errorEl.textContent = message;
+      errorEl.hidden = false;
+      if (el) {
+        el.classList.add("is-invalid");
+        (el === q("[data-date-strip]") ? track : el).focus();
+      }
+      requestAnimationFrame(fitSticky);
+    };
+
+    // ---- Booking received popup ----
+    const doneDialog = q("[data-done-dialog]");
+    const showDone = (ref, emailSent) => {
+      q("[data-done-ref]").textContent = ref;
+      const summary = q("[data-done-summary]");
+      summary.textContent = "";
+      const rows = [
+        ["Tour", tour.name + " " + tour.accent],
+        ["Option", chosenOption().text],
+        ["Date", niceDate(dateEl.value)],
+        ["Pickup", pickupText()],
+      ];
+      if (!isPrivate()) rows.push(["Persons", guestsEl.value]);
+      rows.forEach(([k, v]) => {
+        const dt = document.createElement("dt");
+        dt.textContent = k;
+        const dd = document.createElement("dd");
+        dd.textContent = v;
+        summary.append(dt, dd);
+      });
+      q("[data-done-note]").textContent = emailSent
+        ? "We've sent the details to " + emailEl.value.trim() + "."
+        : "Please keep your reference. Our team will message you to confirm.";
+      q("[data-done-wa]").href =
+        "https://wa.me/" + WHATSAPP_NUMBER + "?text=" + encodeURIComponent("Hello NXT Tours! My booking reference is " + ref + ".");
+      doneDialog.showModal();
+      document.body.classList.add("modal-open");
+    };
+    q("[data-done-close]").addEventListener("click", () => doneDialog.close());
+    doneDialog.addEventListener("click", (e) => {
+      if (e.target === doneDialog) doneDialog.close();
+    });
+    doneDialog.addEventListener("close", () => document.body.classList.remove("modal-open"));
+
+    // ---- Book Now: save the booking through the backend. If the backend can't be reached,
+    // the button falls back to opening WhatsApp with everything typed in. ----
+    let sending = false;
+    waEl.addEventListener("click", async (e) => {
+      const missing = firstMissing();
+      if (missing) {
+        e.preventDefault();
+        showError(missing[0], missing[1]);
+        return;
+      }
+      errorEl.hidden = true;
+      if (!BACKEND.key) return; // no backend configured: let the WhatsApp link open
+      e.preventDefault();
+      if (sending) return;
+      sending = true;
+      waEl.classList.add("is-loading");
+      waEl.setAttribute("aria-busy", "true");
+      const label = waEl.textContent;
+      waEl.textContent = "Sending your booking...";
+      try {
+        const res = await fetch(BACKEND.url + "/functions/v1/create-booking", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", apikey: BACKEND.key },
+          body: JSON.stringify({
+            tour: slug,
+            optionKind: chosenOption().kind,
+            optionText: chosenOption().text,
+            date: dateEl.value,
+            pickup: pickupText(),
+            persons: isPrivate() ? null : Number(guestsEl.value),
+            name: nameEl.value.trim(),
+            email: emailEl.value.trim(),
+            phone: phoneEl.value.trim(),
+            website: trapEl.value,
+          }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (res.ok && data.ok) {
+          showDone(data.ref, data.emailSent);
+        } else if (res.status === 400 || res.status === 429) {
+          showError(null, data.error || "Please check your details and try again.");
+        } else {
+          throw new Error("backend " + res.status);
+        }
+      } catch (err) {
+        console.error("Booking could not be sent", err);
+        showError(null, "We couldn't send your booking right now. Please tap Book Now again, or message us on WhatsApp.");
+      } finally {
+        sending = false;
+        waEl.classList.remove("is-loading");
+        waEl.removeAttribute("aria-busy");
+        waEl.textContent = label;
+      }
+    });
+
+    function onChange(e) {
+      if (e && e.target && e.target.classList) e.target.classList.remove("is-invalid");
+      if (!errorEl.hidden && !firstMissing()) errorEl.hidden = true;
+      updateWhatsApp();
+    }
+    [nameEl, emailEl, phoneEl, pickupTextEl, hotelEl, guestsEl].forEach((el) => el.addEventListener("input", onChange));
+    optionEl.addEventListener("change", (e) => {
+      syncForm();
+      onChange(e);
+      fitSticky();
+    });
+
+    // The pinned booking card can be taller than a laptop screen. Then pin it by its bottom edge
+    // instead, so the Book button is never cut off.
+    const side = q(".tour-detail-side");
+    function fitSticky() {
+      side.style.top = Math.min(104, window.innerHeight - side.offsetHeight - 16) + "px";
+    }
+    window.addEventListener("resize", () => {
+      fitSticky();
+      updateMonth();
+    });
+
+    syncForm();
     updateWhatsApp();
+    fitSticky();
   }
 }

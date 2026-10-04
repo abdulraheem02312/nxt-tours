@@ -1,0 +1,7 @@
+# Minimal Supabase CLI config for deploying the Edge Functions of this site.
+project_id = "nxt-tours"
+
+# The website calls this with the public (publishable) key, which is not a JWT, so the
+# gateway check is off; the function validates every request itself.
+[functions.create-booking]
+verify_jwt = false

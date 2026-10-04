@@ -12,7 +12,7 @@
 
   <link rel="icon" type="image/png" href="images/favicon.png" />
 
-  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/style.css?v=20261004k" />
 </head>
 <body>
 
@@ -61,7 +61,6 @@
       <span class="eyebrow eyebrow-lines is-inline" data-tour-badge>Sharing &amp; Private</span>
       <h1 data-tour-title>Loading tour&hellip;</h1>
 
-      <!-- Meta facts on the left, Sharing/Private switch on the right (script.js hides the switch for private-only tours) -->
       <div class="tour-header-bottom">
         <!-- Fills the empty space under the title with real, already-used site facts (script.js adds the location name and the duration if this tour has one) -->
         <ul class="tour-hero-meta" data-tour-meta>
@@ -70,21 +69,6 @@
           <li><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg> 4.9/5 rating</li>
           <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg> 60,000+ happy travellers</li>
         </ul>
-
-        <!-- Sharing / Private switch: small pill buttons; script.js hides this for private-only tours -->
-        <div class="tour-mode-mini" data-tour-mode>
-          <div class="tour-mode-mini-btns" role="group" aria-label="Choose tour type">
-            <button type="button" class="tour-mode-mini-btn is-active" data-mode="sharing" aria-pressed="true">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-              Sharing Tour
-            </button>
-            <button type="button" class="tour-mode-mini-btn" data-mode="private" aria-pressed="false">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-              Private Tour
-            </button>
-          </div>
-          <p class="tour-mode-mini-note" data-tour-mode-note></p>
-        </div>
       </div>
     </div>
   </header>
@@ -131,8 +115,8 @@
         <h2>Highlights</h2>
         <ul class="tm-points" data-tour-points></ul>
 
-        <!-- Filled only when the tour has stops/inclusions data; hidden otherwise -->
-        <div data-tour-stops></div>
+        <!-- Hour-by-hour animated timeline: filled only when the tour has timeline data -->
+        <div data-tour-timeline></div>
 
         <!-- Itinerary / What's included / Not included / etc: only render once the client confirms the real details -->
         <div data-tour-extra></div>
@@ -145,21 +129,187 @@
       <aside class="tour-detail-side">
         <div class="tour-booking-card card">
           <div class="tm-price-row">
-            <span class="tm-price-from" data-tour-price-from hidden>From</span>
+            <span class="tm-price-label" data-tour-price-label>Sharing tour, per person</span>
             <strong class="tm-price" data-tour-price></strong>
             <del class="tm-was" data-tour-was></del>
             <span class="tm-save" data-tour-save></span>
           </div>
-          <p class="tm-tiers" data-tour-tiers hidden></p>
-          <label class="tour-book-field">Travel date
-            <input type="date" data-tour-date />
+          <!-- Private prices, per vehicle (script.js fills it; hidden for private-only tours) -->
+          <div class="tour-private-box" data-tour-private hidden>
+            <p class="tour-private-head">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 17V7a1 1 0 0 1 1-1h10.5L21 12.5V17"/><path d="M14.5 6v6.5H21"/><path d="M3 17h1.5M8.5 17h6M18.5 17H21"/><circle cx="6.5" cy="17" r="2"/><circle cx="16.5" cy="17" r="2"/></svg>
+              Private tour, per vehicle
+            </p>
+            <ul class="tour-private-list" data-tour-private-list></ul>
+            <p class="tour-private-note" data-tour-private-note></p>
+          </div>
+          <!-- Booking form: script.js turns these into one WhatsApp message. Nothing is stored or sent anywhere else. -->
+          <p class="tour-book-title">Book your tour</p>
+          <label class="tour-book-field">Your name
+            <input type="text" autocomplete="name" placeholder="Full name" data-tour-name />
           </label>
-          <label class="tour-book-field">Guests
+          <label class="tour-book-field">Email
+            <input type="email" autocomplete="email" inputmode="email" placeholder="you@example.com" data-tour-email />
+          </label>
+          <!-- Spam trap: hidden from people, bots fill it in -->
+          <label class="tour-book-trap" aria-hidden="true">Website
+            <input type="text" tabindex="-1" autocomplete="off" data-tour-trap />
+          </label>
+          <label class="tour-book-field">Mobile number <span class="tour-book-optional">(optional)</span>
+            <input type="tel" autocomplete="tel" inputmode="tel" placeholder="+971 50 123 4567" data-tour-phone />
+          </label>
+          <label class="tour-book-field" data-tour-option-field hidden>Tour option
+            <select data-tour-option></select>
+          </label>
+          <!-- Travel date: a swipeable row of days (script.js builds the next 60 days) -->
+          <div class="tour-book-field" role="group" aria-labelledby="date-label">
+            <div class="date-head">
+              <span id="date-label">Travel date</span>
+              <span class="date-head-right">
+                <span class="date-month" data-date-month aria-live="polite"></span>
+                <button type="button" class="date-cal-btn" data-cal-open aria-haspopup="dialog">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4.5" width="18" height="16.5" rx="2.5"/><path d="M3 9.5h18M8 2.5v4M16 2.5v4"/></svg>
+                  Calendar
+                </button>
+              </span>
+            </div>
+            <div class="date-strip" data-date-strip>
+              <button type="button" class="date-arrow is-prev" data-date-prev aria-label="Earlier dates"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15.5 5l-7 7 7 7"/></svg></button>
+              <div class="date-track" data-date-track role="listbox" aria-labelledby="date-label" tabindex="0"></div>
+              <button type="button" class="date-arrow is-next" data-date-next aria-label="Later dates"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8.5 5l7 7-7 7"/></svg></button>
+            </div>
+            <input type="hidden" data-tour-date />
+          </div>
+
+          <!-- Pickup point: a button that opens the pickup picker below (or a text box for tours without a list) -->
+          <div class="tour-book-field" role="group" aria-labelledby="pickup-label">
+            <span id="pickup-label">Pickup point</span>
+            <button type="button" class="pickup-trigger" data-pickup-open aria-haspopup="dialog" hidden>
+              <svg class="pickup-trigger-pin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+              <span class="pickup-trigger-text" data-pickup-label>Choose your pickup point</span>
+              <svg class="pickup-trigger-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8.5 5l7 7-7 7"/></svg>
+            </button>
+            <input type="text" placeholder="Hotel or area in Dubai" data-tour-pickup-text hidden />
+          </div>
+          <label class="tour-book-field" data-tour-hotel-field hidden>Hotel name
+            <input type="text" placeholder="e.g. Rove Downtown" data-tour-hotel />
+          </label>
+          <label class="tour-book-field" data-tour-guests-field>Number of persons
             <input type="number" min="1" max="60" placeholder="e.g. 4" data-tour-guests />
           </label>
-          <a class="btn btn-solid tour-book-btn" data-tour-wa target="_blank" rel="noopener">Book on WhatsApp</a>
-          <p class="tour-ask">Need the exact timings or a private-tour price? Message us and we&rsquo;ll send everything.</p>
+          <p class="tour-book-error" data-tour-error role="alert" hidden></p>
+          <a class="btn btn-solid tour-book-btn" data-tour-wa target="_blank" rel="noopener">Book Now</a>
+          <p class="tour-ask">Questions about pickup, tickets or a custom private tour? Message us and we&rsquo;ll help.</p>
         </div>
+
+        <!-- Booking received popup (script.js fills it after the booking is saved) -->
+        <dialog class="cal-dialog done-dialog" data-done-dialog aria-labelledby="done-title">
+          <div class="done-hero">
+            <span class="done-check" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>
+            <h3 id="done-title">Booking request received!</h3>
+            <p data-done-lead>Thank you. Our team will contact you on WhatsApp shortly to confirm.</p>
+          </div>
+          <div class="done-body">
+            <div class="done-ref">
+              <span>Your reference</span>
+              <strong data-done-ref></strong>
+            </div>
+            <dl class="done-summary" data-done-summary></dl>
+            <p class="done-note" data-done-note></p>
+            <a class="btn done-wa" data-done-wa target="_blank" rel="noopener">
+              <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17.5 14.4c-.3-.1-1.8-.9-2-1-.3-.1-.5-.1-.7.1-.2.3-.8 1-.9 1.2-.2.2-.3.2-.6.1-.3-.1-1.3-.5-2.4-1.5-.9-.8-1.5-1.8-1.7-2.1-.2-.3 0-.5.1-.6l.4-.5c.1-.2.2-.3.3-.5.1-.2 0-.4 0-.5l-.9-2.2c-.2-.6-.5-.5-.7-.5h-.6c-.2 0-.5.1-.8.4-.3.3-1 1-1 2.5s1.1 2.9 1.2 3.1c.1.2 2.1 3.2 5.1 4.5.7.3 1.3.5 1.7.6.7.2 1.4.2 1.9.1.6-.1 1.8-.7 2-1.4.2-.7.2-1.3.2-1.4-.1-.1-.3-.2-.6-.3M12 21.8c-1.8 0-3.5-.5-5-1.4l-.4-.2-3.7 1 1-3.6-.2-.4C2.7 15.6 2.2 13.8 2.2 12 2.2 6.6 6.6 2.2 12 2.2c2.6 0 5.1 1 7 2.9 1.9 1.9 2.9 4.3 2.9 7 0 5.4-4.4 9.8-9.9 9.8M20.5 3.5C18.2 1.3 15.2 0 12 0 5.5 0 .2 5.3.2 11.9c0 2.1.5 4.1 1.6 5.9L.1 24l6.3-1.7c1.7.9 3.7 1.4 5.7 1.4 6.6 0 11.9-5.3 11.9-11.9 0-3.2-1.2-6.2-3.5-8.4"/></svg>
+              Chat with us on WhatsApp
+            </a>
+            <button type="button" class="done-close" data-done-close>Done</button>
+          </div>
+        </dialog>
+
+        <!-- Full month calendar, opened from the "Calendar" button next to the date row (script.js fills it) -->
+        <dialog class="cal-dialog" data-cal-dialog aria-labelledby="cal-title">
+          <div class="pickup-head">
+            <div>
+              <h3 id="cal-title">Choose your travel date</h3>
+              <p class="pickup-sub">Bookings open from tomorrow.</p>
+            </div>
+            <button type="button" class="tm-close" data-cal-close aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+          </div>
+          <div class="cal-nav">
+            <button type="button" class="date-arrow" data-cal-prev aria-label="Previous month"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15.5 5l-7 7 7 7"/></svg></button>
+            <strong class="cal-month" id="cal-month" data-cal-month aria-live="polite"></strong>
+            <button type="button" class="date-arrow" data-cal-next aria-label="Next month"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8.5 5l7 7-7 7"/></svg></button>
+          </div>
+          <div class="cal-week" aria-hidden="true"><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span></div>
+          <div class="cal-grid" data-cal-grid role="grid" aria-labelledby="cal-month"></div>
+          <p class="cal-picked" data-cal-picked></p>
+        </dialog>
+
+        <!-- Write a review: post on Facebook, or send it to the team on WhatsApp (checked before it goes on the site) -->
+        <dialog class="cal-dialog rv-dialog" data-rv-dialog aria-labelledby="rv-title">
+          <div class="pickup-head">
+            <div>
+              <h3 id="rv-title">Share your experience</h3>
+              <p class="pickup-sub">Thank you for travelling with NXT Tours!</p>
+            </div>
+            <button type="button" class="tm-close" data-rv-close aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+          </div>
+          <div class="rv-dialog-body">
+            <form class="rv-form" data-rv-form novalidate>
+              <label class="tour-book-field">Your name
+                <input type="text" autocomplete="name" maxlength="60" placeholder="Full name" data-rv-name />
+              </label>
+              <label class="tour-book-field">Tour
+                <input type="text" readonly data-rv-tour />
+              </label>
+              <div class="tour-book-field" role="radiogroup" aria-label="Your rating">
+                <span>Your rating</span>
+                <div class="rv-stars">
+                  <button type="button" role="radio" aria-checked="false" aria-label="1 star" data-rv-star>&#9733;</button>
+                  <button type="button" role="radio" aria-checked="false" aria-label="2 stars" data-rv-star>&#9733;</button>
+                  <button type="button" role="radio" aria-checked="false" aria-label="3 stars" data-rv-star>&#9733;</button>
+                  <button type="button" role="radio" aria-checked="false" aria-label="4 stars" data-rv-star>&#9733;</button>
+                  <button type="button" role="radio" aria-checked="false" aria-label="5 stars" data-rv-star>&#9733;</button>
+                </div>
+              </div>
+              <label class="tour-book-field">Your review
+                <textarea rows="4" maxlength="1000" placeholder="What did you enjoy most?" data-rv-text></textarea>
+              </label>
+              <label class="tour-book-trap" aria-hidden="true">Website
+                <input type="text" tabindex="-1" autocomplete="off" data-rv-trap />
+              </label>
+              <p class="tour-book-error" data-rv-error role="alert" hidden></p>
+              <button type="submit" class="btn btn-solid tour-book-btn">Submit review</button>
+              <p class="tour-ask">Our team reads every review before it appears on the website.</p>
+              <p class="rv-or"><span>or</span></p>
+              <a class="rv-fb-option" data-rv-fb target="_blank" rel="noopener">
+                <span class="rv-fb-option-icon"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M9.1 23.7v-8H6.6v-3.6h2.5v-1.6c0-4.1 1.8-6 5.9-6 .8 0 2.1.2 2.6.3v3.3h-1.4c-1.4 0-1.9.5-1.9 1.9v2.1h3.3l-.6 3.6h-2.7v8.2C18 23.2 22 18.6 22 13c0-6.1-4.9-11-10-11S2 6.9 2 13c0 5.6 3.9 10.2 9.1 10.7"/></svg></span>
+                <span><strong>Also review us on Facebook</strong><small>Tap "Yes" to recommend NXT Tours. It helps other travellers too.</small></span>
+              </a>
+            </form>
+            <div class="rv-thanks" data-rv-thanks hidden>
+              <span class="done-check" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>
+              <h4>Thank you for your review!</h4>
+              <p>Our team will check it and it will appear on the website soon.</p>
+              <button type="button" class="done-close" data-rv-thanks-close>Close</button>
+            </div>
+          </div>
+        </dialog>
+
+        <!-- Pickup picker: search + pickup points grouped by area (script.js fills the list) -->
+        <dialog class="pickup-dialog" data-pickup-dialog aria-labelledby="pickup-title">
+          <div class="pickup-head">
+            <div>
+              <h3 id="pickup-title">Choose your pickup point</h3>
+              <p class="pickup-sub" data-pickup-sub>Pick the place nearest to you. The time is when we collect you.</p>
+            </div>
+            <button type="button" class="tm-close" data-pickup-close aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+          </div>
+          <label class="pickup-search">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+            <span class="visually-hidden">Search pickup points</span>
+            <input type="search" placeholder="Type your area or metro station" autocomplete="off" data-pickup-search />
+          </label>
+          <div class="pickup-body" data-pickup-body></div>
+        </dialog>
       </aside>
 
     </div>
@@ -208,7 +358,7 @@
 
   <a href="https://wa.me/971586272827" class="whatsapp-float" target="_blank" rel="noopener" aria-label="Chat on WhatsApp"><svg class="icon-wa" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.372-.01-.571-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413"/></svg></a>
 
-  <script src="js/i18n.js"></script>
-  <script src="js/script.js"></script>
+  <script src="js/i18n.js?v=20261004k"></script>
+  <script src="js/script.js?v=20261004k"></script>
 </body>
 </html>
