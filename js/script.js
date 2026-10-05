@@ -15,11 +15,13 @@ const DARK_SECTIONS = ".hero, .page-hero, .stats-strip, .cta-strip, .spotlight-d
 let navTicking = false;
 
 const updateNavbar = () => {
-  // the element under the middle of the bar (skipping the bar itself)
-  const under = document
-    .elementsFromPoint(window.innerWidth / 2, navbar.offsetHeight / 2)
-    .find((el) => !navbar.contains(el));
-  const isDark = Boolean(under && under.closest(DARK_SECTIONS));
+  // Is a dark section behind the middle of the bar? Measured by position, which also works
+  // on the very first run while the page is still loading (elementsFromPoint missed it then).
+  const y = navbar.offsetHeight / 2;
+  const isDark = Array.from(document.querySelectorAll(DARK_SECTIONS)).some((el) => {
+    const r = el.getBoundingClientRect();
+    return r.height > 0 && r.top <= y && r.bottom >= y;
+  });
 
   // At the very top of EVERY page the bar has no background; the glass only appears after 40px
   // of scrolling. Over a light top (tour.html's white header) the text and logo still turn dark
