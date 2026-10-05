@@ -7175,31 +7175,68 @@ button.btn {
 
 .tl-track {
   position: relative;
-  --tl-x: 22px; /* centre of the line, from the left edge */
+  --tl-x: 22px; /* half the dot size */
 }
 
-.tl-line {
+/* The road: drawn by script.js as an SVG through the centre of every stop.
+   base = light grey road, paved = brand colours that fill in as you scroll, dash = white centre line */
+.tl-road {
   position: absolute;
-  left: calc(var(--tl-x) - 2px);
-  top: 22px;
-  bottom: 22px;
-  width: 4px;
-  border-radius: 4px;
-  background: var(--border);
-  overflow: hidden;
+  left: 0;
+  top: 0;
+  overflow: visible;
+  pointer-events: none;
 }
 
-.tl-line-fill {
+.tl-road path {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.tl-road-base {
+  stroke: #efe6e9;
+  stroke-width: 16px;
+}
+
+.tl-road-paved {
+  stroke: url(#tl-pave);
+  stroke-width: 16px;
+  transition: stroke-dashoffset 0.15s linear;
+}
+
+.tl-road-dash {
+  stroke: rgba(255, 255, 255, 0.95);
+  stroke-width: 2px;
+  stroke-dasharray: 7 9;
+}
+
+/* The van drives down the road at the front of the coloured part */
+.tl-van {
   position: absolute;
-  inset: 0;
-  background: var(--gradient-brand);
-  transform: scaleY(0);
-  transform-origin: top;
-  transition: transform 0.15s linear;
+  left: 0;
+  top: 0;
+  z-index: 2;
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--white);
+  color: var(--primary);
+  border: 2px solid var(--accent);
+  box-shadow: 0 6px 16px rgba(28, 16, 19, 0.2);
+  transition: transform 0.15s linear, opacity 0.3s ease;
+  pointer-events: none;
 }
 
-.tl-track.is-static .tl-line-fill {
-  transform: scaleY(1);
+.tl-van svg {
+  width: 20px;
+  height: 20px;
+}
+
+.tl-van.is-hidden {
+  opacity: 0;
 }
 
 .tl-list {
@@ -7215,7 +7252,7 @@ button.btn {
 
 .tl-dot {
   position: absolute;
-  left: 0;
+  left: var(--dot-x, 0px);
   top: 0.9rem;
   width: calc(var(--tl-x) * 2);
   height: calc(var(--tl-x) * 2);
@@ -7244,6 +7281,71 @@ button.btn {
 
 .tl-item.is-reached .tl-dot {
   transform: scale(1.05);
+}
+
+/* every second stop is orange, the brand's second colour */
+.tl-item:nth-child(even) .tl-dot {
+  border-color: rgba(243, 146, 0, 0.45);
+}
+
+.tl-item:nth-child(even).is-reached .tl-dot,
+.tl-track.is-static .tl-item:nth-child(even) .tl-dot {
+  background: var(--accent);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 6px var(--accent-soft);
+}
+
+.tl-item:nth-child(even) .tl-time {
+  background: var(--accent-soft);
+  color: var(--accent-text);
+}
+
+.tl-item:nth-child(even).is-reached .tl-card {
+  border-color: rgba(243, 146, 0, 0.3);
+}
+
+/* ---- Wide column: zigzag. script.js places each card (absolute) and sets the track height ---- */
+.tl-track.is-zig .tl-list {
+  display: block;
+}
+
+.tl-track.is-zig .tl-item {
+  position: absolute;
+  padding-left: 0;
+}
+
+.tl-track.is-zig .tl-dot {
+  top: 1.4rem;
+}
+
+.tl-track.is-zig .tl-item:nth-child(odd) .tl-card {
+  margin-right: 0;
+}
+
+.tl-track.is-zig .tl-card {
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.tl-track.is-zig .tl-photo {
+  flex-basis: auto;
+  aspect-ratio: 16 / 9;
+}
+
+.tl-track.is-zig .tl-item:nth-child(odd) .tl-body {
+  text-align: right;
+}
+
+.tl-track.is-zig .tl-item:nth-child(odd) .tl-dur {
+  flex-direction: row-reverse;
+}
+
+.tl-track.is-zig.is-animated .tl-item:nth-child(odd) .tl-card {
+  transform: translateX(-28px);
+}
+
+.tl-track.is-zig.is-animated .tl-item.is-in .tl-card {
+  transform: none;
 }
 
 .tl-card {
@@ -7969,4 +8071,56 @@ button.btn {
   .tour-detail-side {
     position: static;
   }
+}
+
+/* =========================================================
+   Tour page: orange accents
+   The page was nearly all crimson. Rule: crimson for buttons and main actions, the brand's
+   orange (#F39200) for small accents, so the page has both brand colours.
+   ========================================================= */
+.tour-detail-main > h2::after,
+.tour-detail-main .tl h2::after,
+.tour-detail-main [data-tour-extra] h2::after,
+.tour-detail-main .rv-head h2::after {
+  content: "";
+  display: block;
+  width: 42px;
+  height: 4px;
+  margin-top: 0.45rem;
+  border-radius: 4px;
+  background: var(--accent);
+}
+
+.tour-hero-meta svg {
+  color: var(--accent);
+}
+
+.tour-detail .tm-facts li {
+  border-color: rgba(243, 146, 0, 0.28);
+  background: #fff8ee;
+}
+
+.tour-detail .tm-points:not(.is-no):not(.is-info) li::before {
+  background: var(--accent-soft);
+  color: var(--accent-text);
+}
+
+.tour-detail .tm-points.is-info li::before {
+  background: var(--primary-soft);
+  color: var(--primary);
+}
+
+/* "Save 33%" on the crimson price card */
+.tour-booking-card .tm-save {
+  background: var(--accent);
+  color: var(--text);
+}
+
+.tour-why-grid .why-card:nth-child(even) .why-icon,
+.tour-why-grid .why-card:nth-child(even):hover .why-icon {
+  color: var(--accent-text);
+}
+
+.tour-why-grid .why-card:nth-child(even) .why-icon {
+  box-shadow: 0 4px 12px rgba(243, 146, 0, 0.3);
 }

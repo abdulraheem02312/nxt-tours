@@ -1880,7 +1880,9 @@ if (tourPage) {
       section.innerHTML =
         '<h2>Your Day, <span class="accent-word">Hour by Hour</span></h2>' +
         '<p class="tl-sub"></p>' +
-        '<div class="tl-track"><div class="tl-line" aria-hidden="true"><span class="tl-line-fill"></span></div><ol class="tl-list"></ol></div>';
+        '<div class="tl-track"><svg class="tl-road" aria-hidden="true"></svg>' +
+        '<span class="tl-van" aria-hidden="true">' + svg(ICON_VAN) + "</span>" +
+        '<ol class="tl-list"></ol></div>';
       section.querySelector(".tl-sub").textContent =
         (tour.duration ? tour.duration + ". " : "") + "Timings can shift a little with traffic and group size.";
       const listEl = section.querySelector(".tl-list");
@@ -1951,6 +1953,112 @@ if (tourPage) {
 
       const items = Array.from(listEl.children);
       const track = section.querySelector(".tl-track");
+      const road = section.querySelector(".tl-road");
+      const van = section.querySelector(".tl-van");
+      const NS = "http://www.w3.org/2000/svg";
+      let roadPath = null; // the paved (coloured) layer, used to measure the road
+      let samples = []; // points along the road, to find how far down the page the van is
+
+      // ---- Layout: a winding ROAD with the stops along it ----
+      // Wide (640px+ column): the road snakes down the middle, cards alternate left and right and
+      //   overlap in height, like a zigzag. Positions are worked out here, so cards of any height fit.
+      // Narrow (phones): the road runs down the left edge with a gentle wave, cards on the right.
+      // Every other stop is crimson / orange (the two brand colours).
+      const layout = () => {
+        const W = track.clientWidth;
+        const zig = W >= 640;
+        track.classList.toggle("is-zig", zig);
+        const LANE = 120; // width of the road lane in the middle (wide layout)
+        const cardW = (W - LANE) / 2;
+        const tops = [];
+        const bottoms = { L: 0, R: 0 };
+        let prevTop = -Infinity;
+        items.forEach((li, i) => {
+          const side = i % 2 ? "R" : "L";
+          if (zig) {
+            li.style.width = cardW + "px";
+            li.style.left = side === "L" ? "0px" : cardW + LANE + "px";
+            const top = i === 0 ? 0 : Math.max(prevTop + 140, bottoms[side] + 18);
+            li.style.top = top + "px";
+            tops.push(top);
+            prevTop = top;
+            bottoms[side] = top + li.offsetHeight;
+            // dot in the road lane, swinging a little left/right so the road curves
+            li.style.setProperty("--dot-x", (side === "L" ? cardW + LANE / 2 - 22 - 16 : -LANE / 2 - 22 + 16) + "px");
+          } else {
+            li.style.width = li.style.left = li.style.top = "";
+            li.style.setProperty("--dot-x", (i % 2 ? 6 : 0) + "px");
+          }
+        });
+        track.style.height = zig ? Math.max(bottoms.L, bottoms.R) + "px" : "";
+
+        // Road through the centre of every dot, as smooth S-curves
+        const box = track.getBoundingClientRect();
+        const pts = items.map((li) => {
+          const d = li.querySelector(".tl-dot").getBoundingClientRect();
+          return [d.left + d.width / 2 - box.left, d.top + d.height / 2 - box.top];
+        });
+        const H = track.offsetHeight;
+        let d = "M" + pts[0][0] + " 0 L" + pts[0][0] + " " + pts[0][1];
+        for (let i = 1; i < pts.length; i++) {
+          const [x0, y0] = pts[i - 1];
+          const [x1, y1] = pts[i];
+          const my = (y1 - y0) / 2;
+          d += " C" + x0 + " " + (y0 + my) + " " + x1 + " " + (y1 - my) + " " + x1 + " " + y1;
+        }
+        const end = pts[pts.length - 1];
+        d += " L" + end[0] + " " + H;
+        road.setAttribute("viewBox", "0 0 " + W + " " + H);
+        road.setAttribute("width", W);
+        road.setAttribute("height", H);
+        road.innerHTML =
+          '<defs><linearGradient id="tl-pave" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="0" y2="' + H + '">' +
+            '<stop offset="0" stop-color="#aa1345"/><stop offset="0.5" stop-color="#f39200"/><stop offset="1" stop-color="#aa1345"/>' +
+          "</linearGradient></defs>";
+        const mk = (cls) => {
+          const p = document.createElementNS(NS, "path");
+          p.setAttribute("d", d);
+          p.setAttribute("class", cls);
+          road.appendChild(p);
+          return p;
+        };
+        mk("tl-road-base");
+        roadPath = mk("tl-road-paved");
+        mk("tl-road-dash");
+        const len = roadPath.getTotalLength();
+        roadPath.style.strokeDasharray = len + " " + len;
+        samples = [];
+        for (let k = 0; k <= 240; k++) {
+          const p = roadPath.getPointAtLength((len * k) / 240);
+          samples.push({ l: (len * k) / 240, x: p.x, y: p.y });
+        }
+        progress();
+      };
+
+      // ---- Scroll: the road gets "paved" in brand colours down to a point 60% down the screen,
+      // the van drives along at the front, and each stop lights up once the van passes it ----
+      const progress = () => {
+        if (!roadPath) return;
+        const box = track.getBoundingClientRect();
+        const still = noMotion || !("IntersectionObserver" in window);
+        const markerY = still ? Infinity : window.innerHeight * 0.6 - box.top;
+        let at = samples[samples.length - 1];
+        for (const s of samples) {
+          if (s.y >= markerY) {
+            at = s;
+            break;
+          }
+        }
+        const len = samples[samples.length - 1].l;
+        roadPath.style.strokeDashoffset = String(len - at.l);
+        van.style.transform = "translate(" + (at.x - 19) + "px," + (at.y - 19) + "px)";
+        van.classList.toggle("is-hidden", markerY <= 0 || still);
+        items.forEach((li) => {
+          const dot = li.querySelector(".tl-dot").getBoundingClientRect();
+          li.classList.toggle("is-reached", dot.top + dot.height / 2 - box.top <= markerY);
+        });
+      };
+
       if (noMotion || !("IntersectionObserver" in window)) {
         track.classList.add("is-static");
       } else {
@@ -1963,34 +2071,31 @@ if (tourPage) {
               io.unobserve(e.target);
             });
           },
-          { threshold: 0.2, rootMargin: "0px 0px -8% 0px" }
+          { threshold: 0.15, rootMargin: "0px 0px -8% 0px" }
         );
         items.forEach((li) => io.observe(li));
-
-        // Line fill + dots follow a point 60% down the screen
-        const fill = section.querySelector(".tl-line-fill");
-        let ticking = false;
-        const update = () => {
-          ticking = false;
-          const marker = window.innerHeight * 0.6;
-          const box = track.getBoundingClientRect();
-          const progress = Math.min(1, Math.max(0, (marker - box.top) / box.height));
-          fill.style.transform = "scaleY(" + progress + ")";
-          items.forEach((li) => {
-            const dot = li.querySelector(".tl-dot").getBoundingClientRect();
-            li.classList.toggle("is-reached", dot.top + dot.height / 2 <= marker);
-          });
-        };
-        const onScroll = () => {
-          if (!ticking) {
-            ticking = true;
-            requestAnimationFrame(update);
-          }
-        };
-        window.addEventListener("scroll", onScroll, { passive: true });
-        window.addEventListener("resize", onScroll);
-        update();
       }
+      let ticking = false;
+      const onScroll = () => {
+        if (!ticking) {
+          ticking = true;
+          requestAnimationFrame(() => {
+            ticking = false;
+            progress();
+          });
+        }
+      };
+      window.addEventListener("scroll", onScroll, { passive: true });
+      // Redraw when the column changes width (rotate phone, resize window) or fonts finish loading
+      let lastW = 0;
+      new ResizeObserver(() => {
+        if (track.clientWidth !== lastW) {
+          lastW = track.clientWidth;
+          layout();
+        }
+      }).observe(track);
+      if (document.fonts) document.fonts.ready.then(layout);
+      layout();
     }
 
     // ---- Optional extra sections: only show up once the client confirms the real details ----
