@@ -2,6 +2,13 @@
 
 Update this file at the end of every work session (newest first).
 
+## LIVE on https://nxttours.com (2026-10-05)
+- GitHub Pages from `main` of this repo, custom domain via the `CNAME` file. DNS in cPanel Zone Editor: 4 A records to GitHub (185.199.108-111.153), www CNAME to abdulraheem02312.github.io. MX/TXT untouched. Old site still in cPanel public_html as a backup. Old A record was 162.241.27.228.
+- cPanel login now: https://cpanel.nxttours.com (nxttours.com:2083 no longer reaches cPanel).
+- HTTPS certificate approved. "Enforce HTTPS" in repo Settings > Pages is off (only the repo owner can switch it on); js/config.js sends http visitors to https meanwhile.
+- Supabase secret SITE_URL = https://nxttours.com (email logo).
+- The github.io link redirects to nxttours.com. The repo stays public (no secrets in it).
+
 ## Status (2026-10-05, evening)
 
 ### Done later on 2026-10-05 (on `dev`, NOT live, Abdullah said keep it off live for now)

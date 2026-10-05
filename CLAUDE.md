@@ -6,7 +6,7 @@ Static website (HTML/CSS/JS) for NXT Tours, a Dubai tour operator, plus a Supaba
 
 ## How we work (two people, one repo)
 1. **Start of every session:** `git pull` on the branch you're working on, so you have the other person's latest work.
-2. Work on the **`dev`** branch. `main` is the live site (GitHub Pages builds from `main`), so only finished, checked work is merged into it.
+2. Work on the **`dev`** branch. `main` is the live site: every push to `main` goes live on https://nxttours.com (GitHub Pages, domain set by the `CNAME` file, never delete it), so only finished, checked work is merged into it.
 3. **End of session:** commit with a clear message and `git push`. Update `PROGRESS.md` (what you did, what's next) in the same commit.
 4. Small commits, and tell each other who is working on which part to avoid both editing the same file.
 5. After changing CSS or JS, bump the `?v=YYYYMMDDx` number on the `<link>`/`<script>` tags in every HTML page, or returning visitors keep the old cached files.
