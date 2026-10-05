@@ -19,17 +19,17 @@ Update this file at the end of every work session (newest first).
 
 - **Admin panel, phase 1** (`admin.html`, not linked from the site): email/password login, Bookings (filter by status, search, sort by travel date, change status, team notes, WhatsApp/email the customer), Reviews (approve, hide, delete), Team (owner adds people with a role and a temporary password, resets passwords, removes people; the last owner can't be removed), Account (change password). New people must set their own password on first login. Tested end to end, including that editors can't make themselves owner.
 
-### First owner login (one-time, done by a person, not in code)
+### First owner login (done 2026-10-05, Abdullah is owner)
+How it was done, for reference:
 1. Supabase > Authentication > Users > Add user > Create new user: your email + a strong password, tick "Auto Confirm User".
 2. Supabase > SQL Editor, run (with your email): `insert into public.admin_users (user_id, role, email) select id, 'owner', email from auth.users where email = 'you@example.com';`
 3. Log in at `/admin.html`. Add everyone else from the Team page.
 
 ### Next
-1. Create the first owner login (above).
-2. Collect more Abu Dhabi reviews from the Facebook page.
-3. About / Contact pages still say "hotel & metro pickup" (hotel pickup is private tours only).
-4. Admin panel phase 2: edit prices, tour text, timeline, photos from the panel.
-5. Other tours (Dubai, Hatta, Desert Safari, Khorfakkan) to the same level as Abu Dhabi.
+1. Collect more Abu Dhabi reviews from the Facebook page.
+2. About / Contact pages still say "hotel & metro pickup" (hotel pickup is private tours only).
+3. Admin panel phase 2: edit prices, tour text, timeline, photos from the panel.
+4. Other tours (Dubai, Hatta, Desert Safari, Khorfakkan) to the same level as Abu Dhabi.
 6. Move the site to nxttours.com, then make this repo private and switch `SITE_URL` (email logo) to nxttours.com.
 
 ### Managing bookings and reviews
