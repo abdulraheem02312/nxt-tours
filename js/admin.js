@@ -1,16 +1,22 @@
 // NXT Tours admin panel. Talks to Supabase with the public key + the logged-in person's session;
 // the database security rules decide what each role can see or change, so this file holds no secrets.
+// The Tours editor lives in admin-tours.js and uses the helpers shared on window.NXT (see the end).
 (() => {
   const sb = window.supabase.createClient(BACKEND.url, BACKEND.key);
   const $ = (s, root = document) => root.querySelector(s);
   const $$ = (s, root = document) => Array.from(root.querySelectorAll(s));
   const WHATSAPP_NUMBER = "971586272827";
+  // Short codes used in booking references, same as the create-booking function
+  const TOUR_CODES = { "abu-dhabi": "AD", dubai: "DXB", hatta: "HT", "desert-safari": "DS", khorfakkan: "KF" };
 
   let me = null; // { id, email, role }
   let bookings = [];
   let reviews = [];
+  let tours = []; // rows from the tours table: { slug, data, visible, sort, updated_at, updated_by }
+  let emailCfg = null; // owner only
   let bookingFilter = "new";
   let reviewFilter = "pending";
+  let knownBookingIds = null; // to spot new bookings between refreshes
 
   // ---------- helpers ----------
   const show = (name) => $$("[data-view]").forEach((v) => (v.hidden = v.dataset.view !== name));
@@ -38,14 +44,13 @@
     new Date(iso + (iso.length === 10 ? "T00:00:00" : "")).toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short", year: "numeric" });
   const fmtTime = (iso) =>
     new Date(iso).toLocaleString("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
-  const daysUntil = (iso) => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    return Math.round((new Date(iso + "T00:00:00") - today) / 86400e3);
-  };
-  const callTeam = async (payload) => {
+  // Dates follow the Dubai calendar (UTC+4), wherever the team member is
+  const dubaiISO = (offsetDays = 0) => new Date(Date.now() + 4 * 3600e3 + offsetDays * 86400e3).toISOString().slice(0, 10);
+  const daysUntil = (iso) => Math.round((new Date(iso + "T00:00:00Z") - new Date(dubaiISO() + "T00:00:00Z")) / 86400e3);
+  const tourLabel = (t) => [t.data.name, t.data.accent].filter(Boolean).join(" ");
+  const callFn = async (fn, payload) => {
     const { data: s } = await sb.auth.getSession();
-    const res = await fetch(BACKEND.url + "/functions/v1/admin-team", {
+    const res = await fetch(BACKEND.url + "/functions/v1/" + fn, {
       method: "POST",
       headers: { "Content-Type": "application/json", apikey: BACKEND.key, Authorization: "Bearer " + (s.session ? s.session.access_token : "") },
       body: JSON.stringify(payload),
@@ -54,6 +59,7 @@
     if (!res.ok || !data.ok) throw new Error(data.error || "Something went wrong.");
     return data;
   };
+  const callTeam = (payload) => callFn("admin-team", payload);
 
   // ---------- login / session ----------
   async function start() {
@@ -109,7 +115,9 @@
   );
 
   // ---------- app shell ----------
-  function openApp() {
+  const canEdit = () => me && (me.role === "owner" || me.role === "editor");
+
+  async function openApp() {
     show("app");
     $("[data-me-email]").textContent = me.email;
     $("[data-me-role]").textContent = me.role;
@@ -118,7 +126,11 @@
     tabs.forEach((t) => (t.hidden = !t.dataset.roles.split(" ").includes(me.role)));
     const first = tabs.find((t) => !t.hidden);
     selectTab(first.dataset.tab);
-    if (me.role !== "reviewer") loadBookings();
+    if (canEdit()) {
+      await loadTours();
+      loadBookings();
+    }
+    if (me.role === "owner") loadEmailCfg().then(() => !$("[data-panel=home]").hidden && renderHome());
     loadReviews();
   }
 
@@ -129,33 +141,117 @@
     });
     $$("[data-panel]").forEach((p) => (p.hidden = p.dataset.panel !== name));
     if (name === "team") loadTeam();
+    if (name === "home") renderHome();
+    if (name === "calendar") loadBlocked();
+    if (name === "settings") loadSettings();
+    if (name === "activity") loadActivity();
+    if (name === "tours" && window.NXT && NXT.openTours) NXT.openTours();
+    window.scrollTo(0, 0);
   }
   $$("[data-tab]").forEach((t) => t.addEventListener("click", () => selectTab(t.dataset.tab)));
   $$("[data-refresh]").forEach((b) =>
     b.addEventListener("click", () => {
-      if (me.role !== "reviewer") loadBookings();
+      if (canEdit()) loadBookings();
       loadReviews();
       toast("Updated");
     })
   );
 
-  // Check for new bookings every minute while the panel is open and visible
+  // Check for new bookings every 30 seconds while the panel is open
   setInterval(() => {
-    if (me && document.visibilityState === "visible") {
-      if (me.role !== "reviewer") loadBookings(true);
-      loadReviews(true);
+    if (!me) return;
+    if (canEdit()) loadBookings(true);
+    if (document.visibilityState === "visible") loadReviews(true);
+  }, 30000);
+
+  // ---------- tours (list used by the dashboard, manual bookings and blocked dates) ----------
+  async function loadTours() {
+    const { data, error } = await sb.from("tours").select("slug, data, visible, sort, updated_at, updated_by").order("sort");
+    if (error) return toast("Could not load tours", true);
+    tours = data || [];
+    fillTourSelects();
+  }
+
+  function fillTourSelects() {
+    const blockSel = $("[data-block-tour]");
+    blockSel.textContent = "";
+    blockSel.appendChild(new Option("All tours", ""));
+    tours.forEach((t) => blockSel.appendChild(new Option(tourLabel(t), t.slug)));
+    const mSel = $("[data-m-tour]");
+    mSel.textContent = "";
+    tours.forEach((t) => mSel.appendChild(new Option(tourLabel(t) + (t.visible ? "" : " (hidden)"), t.slug)));
+  }
+
+  // ---------- new booking alerts ----------
+  let audioCtx = null;
+  const beep = () => {
+    try {
+      audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+      [0, 0.18].forEach((delay) => {
+        const o = audioCtx.createOscillator();
+        const g = audioCtx.createGain();
+        o.frequency.value = 880;
+        g.gain.setValueAtTime(0.0001, audioCtx.currentTime + delay);
+        g.gain.exponentialRampToValueAtTime(0.25, audioCtx.currentTime + delay + 0.02);
+        g.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + delay + 0.15);
+        o.connect(g).connect(audioCtx.destination);
+        o.start(audioCtx.currentTime + delay);
+        o.stop(audioCtx.currentTime + delay + 0.16);
+      });
+    } catch {
+      /* sound is a nice-to-have */
     }
-  }, 60000);
+  };
+
+  function announceNew(list) {
+    list.forEach((b) => {
+      toast("New booking " + b.ref + " from " + b.customer_name);
+      if ("Notification" in window && Notification.permission === "granted") {
+        const n = new Notification("New booking: " + b.tour_name, {
+          body: b.customer_name + ", " + fmtDate(b.travel_date) + " (" + b.ref + ")",
+          icon: "images/favicon.png",
+          tag: b.ref,
+        });
+        n.onclick = () => {
+          window.focus();
+          selectTab("bookings");
+        };
+      }
+    });
+    beep();
+  }
+
+  const updateTitle = () => {
+    const n = bookings.filter((b) => b.status === "new").length;
+    document.title = (n ? "(" + n + ") " : "") + "NXT Tours Admin";
+  };
+
+  const alertsCard = $("[data-alerts-card]");
+  alertsCard.hidden = !("Notification" in window) || Notification.permission !== "default";
+  $("[data-alerts-on]").addEventListener("click", async () => {
+    const p = await Notification.requestPermission();
+    alertsCard.hidden = true;
+    toast(p === "granted" ? "Pop-ups are on for this browser" : "Pop-ups were blocked in the browser", p !== "granted");
+    beep(); // also unlocks sound in browsers that need a click first
+  });
 
   // ---------- bookings ----------
   async function loadBookings(quiet) {
-    const { data, error } = await sb.from("bookings").select("*").order("created_at", { ascending: false }).limit(1000);
+    const { data, error } = await sb.from("bookings").select("*").order("created_at", { ascending: false }).limit(2000);
     if (error) {
       if (!quiet) toast("Could not load bookings", true);
       return;
     }
     bookings = data || [];
+    const ids = new Set(bookings.map((b) => b.id));
+    if (knownBookingIds) {
+      const fresh = bookings.filter((b) => !knownBookingIds.has(b.id) && b.source !== "manual");
+      if (fresh.length) announceNew(fresh);
+    }
+    knownBookingIds = ids;
+    updateTitle();
     renderBookings();
+    if (!$("[data-panel=home]").hidden) renderHome();
   }
 
   function renderBookings() {
@@ -169,22 +265,26 @@
     badge.textContent = counts.new;
     badge.hidden = !counts.new;
 
+    const list = filteredBookings();
+    const box = $("[data-booking-list]");
+    box.textContent = "";
+    if (!list.length) {
+      box.appendChild(el("p", "ad-empty", $("[data-booking-search]").value.trim() ? "No bookings match your search." : "No bookings here yet."));
+      return;
+    }
+    list.forEach((b) => box.appendChild(bookingCard(b)));
+  }
+
+  function filteredBookings() {
     const term = $("[data-booking-search]").value.trim().toLowerCase();
     let list = bookings.filter((b) => bookingFilter === "all" || b.status === bookingFilter);
     if (term) {
       list = list.filter((b) =>
-        [b.ref, b.customer_name, b.customer_email, b.customer_phone || "", b.pickup].join(" ").toLowerCase().includes(term)
+        [b.ref, b.customer_name, b.customer_email || "", b.customer_phone || "", b.pickup].join(" ").toLowerCase().includes(term)
       );
     }
     if ($("[data-booking-sort]").value === "travel") list = list.slice().sort((a, b) => a.travel_date.localeCompare(b.travel_date));
-
-    const box = $("[data-booking-list]");
-    box.textContent = "";
-    if (!list.length) {
-      box.appendChild(el("p", "ad-empty", term ? "No bookings match your search." : "No bookings here yet."));
-      return;
-    }
-    list.forEach((b) => box.appendChild(bookingCard(b)));
+    return list;
   }
 
   function kv(label, value, extra) {
@@ -203,8 +303,12 @@
     left.appendChild(el("span", "ad-bk-ref", b.ref));
     left.appendChild(document.createTextNode("  "));
     left.appendChild(el("span", "ad-status " + b.status, b.status));
+    if (b.source === "manual") {
+      left.appendChild(document.createTextNode(" "));
+      left.appendChild(el("span", "ad-pill-manual", "Added by hand"));
+    }
     head.appendChild(left);
-    head.appendChild(el("span", "ad-bk-when", "Received " + fmtTime(b.created_at)));
+    head.appendChild(el("span", "ad-bk-when", (b.source === "manual" ? "Added " : "Received ") + fmtTime(b.created_at) + (b.created_by ? " by " + b.created_by : "")));
     card.appendChild(head);
 
     const grid = el("div", "ad-bk-grid");
@@ -216,7 +320,7 @@
     grid.appendChild(kv("Pickup", b.pickup));
     if (b.persons) grid.appendChild(kv("Persons", String(b.persons)));
     grid.appendChild(kv("Customer", b.customer_name));
-    grid.appendChild(kv("Email", b.customer_email));
+    grid.appendChild(kv("Email", b.customer_email || "Not given"));
     grid.appendChild(kv("Mobile", b.customer_phone || "Not given"));
     card.appendChild(grid);
 
@@ -229,7 +333,18 @@
       if (s === b.status) o.selected = true;
       sel.appendChild(o);
     });
-    sel.addEventListener("change", () => updateBooking(b, { status: sel.value }, "Status updated"));
+    sel.addEventListener("change", async () => {
+      const ok = await updateBooking(b, { status: sel.value }, "Status updated");
+      if (ok && (sel.value === "confirmed" || sel.value === "cancelled")) {
+        // Emails the customer only if "Status update" emails are switched on in Settings
+        try {
+          const r = await callFn("notify", { action: "status", bookingId: b.id });
+          if (r.sent) toast("Status updated, customer emailed");
+        } catch {
+          /* status is saved either way */
+        }
+      }
+    });
     actions.appendChild(sel);
 
     const phone = (b.customer_phone || "").replace(/\D/g, "");
@@ -240,9 +355,11 @@
       wa.rel = "noopener";
       actions.appendChild(wa);
     }
-    const mail = el("a", "ad-btn ad-btn-ghost ad-btn-sm", "Email");
-    mail.href = "mailto:" + b.customer_email + "?subject=" + encodeURIComponent("Your NXT Tours booking " + b.ref);
-    actions.appendChild(mail);
+    if (b.customer_email) {
+      const mail = el("a", "ad-btn ad-btn-ghost ad-btn-sm", "Email");
+      mail.href = "mailto:" + b.customer_email + "?subject=" + encodeURIComponent("Your NXT Tours booking " + b.ref);
+      actions.appendChild(mail);
+    }
     card.appendChild(actions);
 
     const row = el("div", "ad-notes-row");
@@ -260,10 +377,15 @@
 
   async function updateBooking(b, changes, okMsg) {
     const { error } = await sb.from("bookings").update(changes).eq("id", b.id);
-    if (error) return toast("Could not save, please try again", true);
+    if (error) {
+      toast("Could not save, please try again", true);
+      return false;
+    }
     Object.assign(b, changes);
     toast(okMsg);
+    updateTitle();
     renderBookings();
+    return true;
   }
 
   $$("[data-booking-filters] [data-status]").forEach((c) =>
@@ -276,6 +398,190 @@
   $("[data-booking-search]").addEventListener("input", renderBookings);
   $("[data-booking-sort]").addEventListener("change", renderBookings);
 
+  // ---- Download the current list as a spreadsheet (CSV opens in Excel / Google Sheets) ----
+  $("[data-booking-csv]").addEventListener("click", () => {
+    const list = filteredBookings();
+    if (!list.length) return toast("Nothing to download in this list", true);
+    const cols = [
+      ["Reference", "ref"], ["Status", "status"], ["Source", "source"], ["Received", "created_at"], ["Travel date", "travel_date"],
+      ["Tour", "tour_name"], ["Option", "option_text"], ["Persons", "persons"], ["Pickup", "pickup"], ["Customer", "customer_name"],
+      ["Email", "customer_email"], ["Mobile", "customer_phone"], ["Team notes", "team_notes"],
+    ];
+    const cell = (v) => {
+      const s = v == null ? "" : String(v);
+      // a leading = + - @ would run as a formula in Excel
+      const safe = /^[=+\-@]/.test(s) ? "'" + s : s;
+      return '"' + safe.replace(/"/g, '""') + '"';
+    };
+    const lines = [cols.map((c) => cell(c[0])).join(",")].concat(
+      list.map((b) => cols.map(([, k]) => cell(k === "created_at" ? fmtTime(b[k]) : b[k])).join(","))
+    );
+    const blob = new Blob(["﻿" + lines.join("\r\n")], { type: "text/csv;charset=utf-8" });
+    const a = el("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "nxt-bookings-" + bookingFilter + "-" + dubaiISO() + ".csv";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+  });
+
+  // ---- Add a booking by hand ----
+  const mDialog = $("[data-manual-dialog]");
+  const mTour = $("[data-m-tour]");
+  const mOption = $("[data-m-option]");
+  const money = (n) => "AED " + (Number.isInteger(n) ? n : Number(n).toFixed(2));
+
+  function fillOptions() {
+    const t = tours.find((x) => x.slug === mTour.value);
+    mOption.textContent = "";
+    if (!t) return;
+    const d = t.data;
+    if (!/private only/i.test(d.type || "")) {
+      const o = new Option("Sharing, " + money(d.price) + " / person", "sharing");
+      o.dataset.kind = "sharing";
+      mOption.appendChild(o);
+    }
+    (d.privateTiers || []).forEach((tier) => {
+      const o = new Option("Private " + tier.seats + "-seater, " + money(tier.price), "private-" + tier.seats);
+      o.dataset.kind = "private";
+      mOption.appendChild(o);
+    });
+    if (!(d.privateTiers || []).length && /private/i.test(d.type || "")) {
+      const o = new Option("Private" + (/private only/i.test(d.type) ? ", " + money(d.price) : ""), "private");
+      o.dataset.kind = "private";
+      mOption.appendChild(o);
+    }
+    syncPersons();
+  }
+  const optionKind = () => (mOption.selectedOptions[0] ? mOption.selectedOptions[0].dataset.kind : "sharing");
+  const syncPersons = () => ($("[data-m-persons-field]").hidden = optionKind() !== "sharing");
+  mTour.addEventListener("change", fillOptions);
+  mOption.addEventListener("change", syncPersons);
+
+  $("[data-booking-add]").addEventListener("click", () => {
+    $("[data-manual-form]").reset();
+    setError("[data-manual-error]", "");
+    if (tours.length) mTour.value = tours[0].slug;
+    fillOptions();
+    $("[data-m-date]").min = dubaiISO();
+    $("[data-m-date]").value = dubaiISO(1);
+    mDialog.showModal();
+  });
+  $("[data-manual-close]").addEventListener("click", () => mDialog.close());
+
+  const REF_CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  const makeRef = (slug) => {
+    const code = TOUR_CODES[slug] || slug.split("-").map((w) => w[0]).join("").toUpperCase().slice(0, 4);
+    const bytes = crypto.getRandomValues(new Uint8Array(5));
+    return "NXT-" + code + "-" + Array.from(bytes, (b) => REF_CHARS[b % REF_CHARS.length]).join("");
+  };
+
+  $("[data-manual-form]").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const t = tours.find((x) => x.slug === mTour.value);
+    const kind = optionKind();
+    const v = (s) => $(s).value.trim();
+    const rec = {
+      source: "manual",
+      tour_slug: t ? t.slug : "",
+      tour_name: t ? tourLabel(t) : "",
+      option_kind: kind,
+      option_text: mOption.selectedOptions[0] ? mOption.selectedOptions[0].textContent : "",
+      travel_date: v("[data-m-date]"),
+      pickup: v("[data-m-pickup]"),
+      persons: kind === "sharing" ? Math.round(Number(v("[data-m-persons]"))) : null,
+      customer_name: v("[data-m-name]"),
+      customer_email: v("[data-m-email]").toLowerCase() || null,
+      customer_phone: v("[data-m-phone]") || null,
+      status: $("[data-m-status]").value,
+      team_notes: v("[data-m-notes]") || null,
+    };
+    const missing = !t ? "Please choose a tour." : !rec.travel_date ? "Please choose the travel date." : !rec.pickup ? "Please enter the pickup point or hotel." : rec.customer_name.length < 2 ? "Please enter the customer's name." : kind === "sharing" && !(rec.persons >= 1 && rec.persons <= 60) ? "Persons must be between 1 and 60." : rec.customer_email && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(rec.customer_email) ? "That email doesn't look right." : "";
+    if (missing) return setError("[data-manual-error]", missing);
+    const btn = e.submitter || $("[data-manual-form] [type=submit]");
+    btn.disabled = true;
+    let saved = null;
+    for (let i = 0; i < 4 && !saved; i++) {
+      rec.ref = makeRef(rec.tour_slug);
+      const { error } = await sb.from("bookings").insert(rec);
+      if (!error) saved = rec.ref;
+      else if (error.code !== "23505") break;
+    }
+    btn.disabled = false;
+    if (!saved) return setError("[data-manual-error]", "Could not save the booking. Please try again.");
+    mDialog.close();
+    toast("Booking " + saved + " added");
+    loadBookings(true);
+  });
+
+  // ---------- dashboard ----------
+  function renderHome() {
+    const stats = $("[data-stats]");
+    stats.textContent = "";
+    const today = dubaiISO();
+    const week = dubaiISO(6);
+    const active = bookings.filter((b) => b.status !== "cancelled");
+    const upcoming = active.filter((b) => b.travel_date >= today && b.travel_date <= week);
+    const receivedToday = bookings.filter((b) => new Date(new Date(b.created_at).getTime() + 4 * 3600e3).toISOString().slice(0, 10) === today).length;
+    const pendingReviews = reviews.filter((r) => !r.approved).length;
+    const people = upcoming.reduce((n, b) => n + (b.persons || 0), 0);
+    const tile = (num, label, sub, tab, tone) => {
+      const t = el("button", "ad-stat" + (tone ? " is-" + tone : ""));
+      t.type = "button";
+      t.appendChild(el("strong", null, String(num)));
+      t.appendChild(el("span", null, label));
+      if (sub) t.appendChild(el("small", null, sub));
+      t.addEventListener("click", () => {
+        if (tab === "bookings-new") {
+          bookingFilter = "new";
+          $$("[data-booking-filters] [data-status]").forEach((x) => x.classList.toggle("is-active", x.dataset.status === "new"));
+          renderBookings();
+          selectTab("bookings");
+        } else selectTab(tab);
+      });
+      stats.appendChild(t);
+    };
+    tile(bookings.filter((b) => b.status === "new").length, "New bookings", "waiting for you to confirm", "bookings-new", "accent");
+    tile(receivedToday, "Received today", null, "bookings");
+    tile(upcoming.length, "Tours in the next 7 days", people ? people + " people on sharing tours" : null, "bookings");
+    tile(pendingReviews, "Reviews to approve", null, "reviews", pendingReviews ? "primary" : "");
+
+    // Email reminder for the owner while team alerts are off
+    const note = $("[data-email-note]");
+    if (me.role === "owner" && emailCfg && !(emailCfg.team_alert_on && emailCfg.team_emails)) {
+      note.textContent = "";
+      note.appendChild(el("strong", null, "New-booking emails to the team are off. "));
+      note.appendChild(document.createTextNode("Bookings still arrive here, with a pop-up while this panel is open. Once the company mailbox exists, add it in Settings > Emails and switch the alert on."));
+      note.hidden = false;
+    } else note.hidden = true;
+
+    const box = $("[data-upcoming]");
+    box.textContent = "";
+    if (!upcoming.length) {
+      box.appendChild(el("p", "ad-empty", "No tours booked for the next 7 days yet."));
+      return;
+    }
+    const byDate = {};
+    upcoming.sort((a, b) => a.travel_date.localeCompare(b.travel_date)).forEach((b) => (byDate[b.travel_date] = byDate[b.travel_date] || []).push(b));
+    Object.keys(byDate).forEach((date) => {
+      const card = el("div", "ad-card ad-day");
+      const d = daysUntil(date);
+      const h = el("h4", null, fmtDate(date));
+      h.appendChild(el("span", "ad-soon", d === 0 ? "today" : d === 1 ? "tomorrow" : "in " + d + " days"));
+      card.appendChild(h);
+      byDate[date].forEach((b) => {
+        const r = el("div", "ad-day-row");
+        r.appendChild(el("span", "ad-status " + b.status, b.status));
+        r.appendChild(el("strong", null, b.customer_name));
+        r.appendChild(el("span", null, b.tour_name + (b.persons ? ", " + b.persons + " pers." : "") + ", " + b.option_text));
+        r.appendChild(el("small", null, b.pickup + "  ·  " + b.ref));
+        card.appendChild(r);
+      });
+      box.appendChild(card);
+    });
+  }
+
   // ---------- reviews ----------
   async function loadReviews(quiet) {
     const { data, error } = await sb.from("reviews").select("*").order("created_at", { ascending: false }).limit(1000);
@@ -285,6 +591,7 @@
     }
     reviews = data || [];
     renderReviews();
+    if (canEdit() && !$("[data-panel=home]").hidden) renderHome();
   }
 
   function renderReviews() {
@@ -351,6 +658,172 @@
       renderReviews();
     })
   );
+
+  // ---------- blocked dates ----------
+  async function loadBlocked() {
+    $("[data-block-from]").min = $("[data-block-to]").min = dubaiISO();
+    const { data, error } = await sb.from("blocked_dates").select("*").gte("date", dubaiISO()).order("date");
+    const box = $("[data-block-list]");
+    box.textContent = "";
+    if (error) return toast("Could not load blocked dates", true);
+    if (!data.length) {
+      box.appendChild(el("p", "ad-empty", "No blocked dates. Every day can be booked."));
+      return;
+    }
+    data.forEach((b) => {
+      const card = el("div", "ad-card ad-block-item");
+      const who = el("div");
+      who.appendChild(el("strong", null, fmtDate(b.date)));
+      const t = tours.find((x) => x.slug === b.tour_slug);
+      who.appendChild(el("span", "ad-pill-wait", t ? tourLabel(t) : "All tours"));
+      if (b.note) who.appendChild(el("span", "ad-muted", b.note));
+      card.appendChild(who);
+      const del = el("button", "ad-btn ad-btn-ghost ad-btn-sm", "Unblock");
+      del.type = "button";
+      del.addEventListener("click", async () => {
+        const { error: err } = await sb.from("blocked_dates").delete().eq("id", b.id);
+        if (err) return toast("Could not unblock, please try again", true);
+        toast("Date unblocked");
+        loadBlocked();
+      });
+      card.appendChild(del);
+      box.appendChild(card);
+    });
+  }
+
+  $("[data-block-form]").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const from = $("[data-block-from]").value;
+    const to = $("[data-block-to]").value || from;
+    const tour = $("[data-block-tour]").value || null;
+    const note = $("[data-block-note]").value.trim() || null;
+    if (!from) return setError("[data-block-error]", "Please choose a date.");
+    if (to < from) return setError("[data-block-error]", "The 'To' date is before the 'From' date.");
+    const days = [];
+    for (let d = new Date(from + "T00:00:00Z"); d <= new Date(to + "T00:00:00Z"); d.setUTCDate(d.getUTCDate() + 1)) days.push(d.toISOString().slice(0, 10));
+    if (days.length > 92) return setError("[data-block-error]", "Please block at most 3 months at a time.");
+    setError("[data-block-error]", "");
+    // skip days that are already blocked for the same tour
+    const { data: existing } = await sb.from("blocked_dates").select("date, tour_slug").in("date", days);
+    const taken = new Set((existing || []).filter((x) => x.tour_slug === tour).map((x) => x.date));
+    const rows = days.filter((d) => !taken.has(d)).map((date) => ({ date, tour_slug: tour, note }));
+    if (!rows.length) return toast("Already blocked");
+    const { error } = await sb.from("blocked_dates").insert(rows);
+    if (error) return setError("[data-block-error]", "Could not save. Please try again.");
+    $("[data-block-form]").reset();
+    toast(rows.length === 1 ? "Date blocked" : rows.length + " days blocked");
+    loadBlocked();
+  });
+
+  // ---------- settings (owner) ----------
+  const cutoffSel = $("[data-set-cutoff]");
+  for (let h = 0; h < 24; h++) cutoffSel.appendChild(new Option((h % 12 || 12) + ":00 " + (h < 12 ? "AM" : "PM"), String(h)));
+
+  async function loadEmailCfg() {
+    const { data } = await sb.from("email_settings").select("*").eq("id", 1).maybeSingle();
+    emailCfg = data;
+    return data;
+  }
+
+  async function loadSettings() {
+    const [{ data: site }, mail] = await Promise.all([sb.from("site_settings").select("*").eq("id", 1).maybeSingle(), loadEmailCfg()]);
+    if (site) {
+      $("[data-set-whatsapp]").value = site.whatsapp || "";
+      $("[data-set-phone]").value = site.phone || "";
+      $("[data-set-email]").value = site.email || "";
+      cutoffSel.value = String(site.cutoff_hour);
+      $("[data-set-offer-on]").checked = site.offer_on;
+      $("[data-set-offer-text]").value = site.offer_text || "";
+    }
+    if (mail) {
+      $("[data-set-team]").value = mail.team_emails || "";
+      $("[data-set-team-on]").checked = mail.team_alert_on;
+      $("[data-set-status-on]").checked = mail.status_on;
+      $("[data-set-reminder-on]").checked = mail.reminder_on;
+      $("[data-set-review-on]").checked = mail.review_request_on;
+    }
+  }
+
+  $("[data-site-form]").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const wa = $("[data-set-whatsapp]").value.replace(/\D/g, "");
+    const email = $("[data-set-email]").value.trim();
+    const offerOn = $("[data-set-offer-on]").checked;
+    const offerText = $("[data-set-offer-text]").value.trim();
+    const problem = wa.length < 8 ? "Please enter the WhatsApp number with the country code, e.g. 971586272827." : email && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email) ? "The email doesn't look right." : offerOn && !offerText ? "Please write the offer text, or switch the banner off." : "";
+    if (problem) return setError("[data-site-error]", problem);
+    setError("[data-site-error]", "");
+    const { error } = await sb.from("site_settings").update({
+      whatsapp: wa,
+      phone: $("[data-set-phone]").value.trim() || null,
+      email: email || null,
+      cutoff_hour: Number(cutoffSel.value),
+      offer_on: offerOn,
+      offer_text: offerText || null,
+    }).eq("id", 1);
+    if (error) return setError("[data-site-error]", "Could not save. Please try again.");
+    toast("Website settings saved");
+  });
+
+  const teamList = () => $("[data-set-team]").value.split(/[,\s;]+/).map((s) => s.trim()).filter(Boolean);
+  $("[data-email-form]").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const list = teamList();
+    const bad = list.find((s) => !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(s));
+    if (bad) return setError("[data-email-error]", "This email doesn't look right: " + bad);
+    if ($("[data-set-team-on]").checked && !list.length) return setError("[data-email-error]", "Add the team email first, or switch the new booking alert off.");
+    setError("[data-email-error]", "");
+    const { error } = await sb.from("email_settings").update({
+      team_emails: list.join(", ") || null,
+      team_alert_on: $("[data-set-team-on]").checked,
+      status_on: $("[data-set-status-on]").checked,
+      reminder_on: $("[data-set-reminder-on]").checked,
+      review_request_on: $("[data-set-review-on]").checked,
+    }).eq("id", 1);
+    if (error) return setError("[data-email-error]", "Could not save. Please try again.");
+    await loadEmailCfg();
+    toast("Email settings saved");
+  });
+
+  $("[data-email-test]").addEventListener("click", async (e) => {
+    const list = teamList();
+    if (!list.length) return setError("[data-email-error]", "Type the team email first.");
+    e.currentTarget.disabled = true;
+    try {
+      await callFn("notify", { action: "test", to: list.join(",") });
+      setError("[data-email-error]", "");
+      toast("Test email sent to " + list.join(", "));
+    } catch (err) {
+      setError("[data-email-error]", err.message);
+    } finally {
+      e.currentTarget.disabled = false;
+    }
+  });
+
+  // ---------- activity (owner) ----------
+  async function loadActivity() {
+    const { data, error } = await sb.from("activity_log").select("*").order("at", { ascending: false }).limit(300);
+    const box = $("[data-activity-list]");
+    box.textContent = "";
+    if (error) return toast("Could not load the activity", true);
+    if (!data.length) {
+      box.appendChild(el("p", "ad-empty", "Nothing yet. Changes made in this panel will show up here."));
+      return;
+    }
+    const table = el("div", "ad-card ad-log");
+    data.forEach((a) => {
+      const r = el("div", "ad-log-row");
+      r.appendChild(el("span", "ad-log-when", fmtTime(a.at)));
+      r.appendChild(el("span", "ad-log-who", a.actor));
+      const what = el("span", "ad-log-what", a.action + (a.target ? ": " + a.target : ""));
+      const det = a.details ? Object.entries(a.details).map(([k, v]) => (v === true ? k : k + " " + v)).join(", ") : "";
+      if (det) what.appendChild(el("small", null, det));
+      r.appendChild(what);
+      table.appendChild(r);
+    });
+    box.appendChild(table);
+  }
+  $("[data-activity-refresh]").addEventListener("click", loadActivity);
 
   // ---------- team (owner only) ----------
   const loginUrl = () => location.origin + location.pathname;
@@ -477,6 +950,17 @@
   sb.auth.onAuthStateChange((event) => {
     if (event === "SIGNED_OUT") show("login");
   });
+
+  // Shared with admin-tours.js
+  window.NXT = {
+    sb, $, $$, el, toast, setError, fmtTime, tourLabel,
+    me: () => me,
+    tours: () => tours,
+    reloadTours: async () => {
+      await loadTours();
+      return tours;
+    },
+  };
 
   start();
 })();

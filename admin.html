@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/admin.css?v=20261005e" />
+  <link rel="stylesheet" href="css/admin.css?v=20261005f" />
 </head>
 <body>
 
@@ -63,8 +63,13 @@
     <header class="ad-top">
       <img class="ad-top-logo" src="images/nxt-logo-white.png" alt="NXT Tours" width="130" height="40" />
       <nav class="ad-tabs" role="tablist" aria-label="Admin sections">
+        <button type="button" role="tab" class="ad-tab" data-tab="home" data-roles="owner editor">Dashboard</button>
         <button type="button" role="tab" class="ad-tab" data-tab="bookings" data-roles="owner editor">Bookings <span class="ad-count" data-count="new" hidden></span></button>
         <button type="button" role="tab" class="ad-tab" data-tab="reviews" data-roles="owner editor reviewer">Reviews <span class="ad-count" data-count="pending" hidden></span></button>
+        <button type="button" role="tab" class="ad-tab" data-tab="tours" data-roles="owner editor">Tours</button>
+        <button type="button" role="tab" class="ad-tab" data-tab="calendar" data-roles="owner editor">Blocked dates</button>
+        <button type="button" role="tab" class="ad-tab" data-tab="settings" data-roles="owner">Settings</button>
+        <button type="button" role="tab" class="ad-tab" data-tab="activity" data-roles="owner">Activity</button>
         <button type="button" role="tab" class="ad-tab" data-tab="team" data-roles="owner">Team</button>
         <button type="button" role="tab" class="ad-tab" data-tab="account" data-roles="owner editor reviewer">Account</button>
       </nav>
@@ -75,6 +80,28 @@
     </header>
 
     <main class="ad-main">
+      <!-- Dashboard -->
+      <section class="ad-panel" data-panel="home" hidden>
+        <div class="ad-panel-head">
+          <div>
+            <h2>Dashboard</h2>
+            <p class="ad-muted">What needs attention. Dates are Dubai time.</p>
+          </div>
+          <button type="button" class="ad-btn ad-btn-ghost" data-refresh>Refresh</button>
+        </div>
+        <div class="ad-stats" data-stats></div>
+        <div class="ad-card ad-alerts" data-alerts-card hidden>
+          <div>
+            <strong>Get a pop-up when a new booking arrives</strong>
+            <p class="ad-muted">While this panel is open, you get a pop-up and a short sound for every new booking, even when you are in another tab.</p>
+          </div>
+          <button type="button" class="ad-btn ad-btn-primary ad-btn-sm" data-alerts-on>Turn on pop-ups</button>
+        </div>
+        <div class="ad-card ad-email-note" data-email-note hidden></div>
+        <h3 class="ad-section-title">Tours in the next 7 days</h3>
+        <div class="ad-list" data-upcoming></div>
+      </section>
+
       <!-- Bookings -->
       <section class="ad-panel" data-panel="bookings" hidden>
         <div class="ad-panel-head">
@@ -98,6 +125,10 @@
             <option value="travel">Travel date (soonest)</option>
           </select>
         </div>
+        <div class="ad-toolbar">
+          <button type="button" class="ad-btn ad-btn-primary" data-booking-add>+ Add booking</button>
+          <button type="button" class="ad-btn ad-btn-ghost" data-booking-csv>Download list (Excel)</button>
+        </div>
         <div class="ad-list" data-booking-list></div>
       </section>
 
@@ -120,6 +151,114 @@
         <div class="ad-list" data-review-list></div>
       </section>
 
+      <!-- Tours -->
+      <section class="ad-panel" data-panel="tours" hidden>
+        <div data-tours-home>
+          <div class="ad-panel-head">
+            <div>
+              <h2>Tours</h2>
+              <p class="ad-muted">Change prices, text, the timeline, pickup points and photos. Changes show on the website as soon as you save.</p>
+            </div>
+          </div>
+          <div class="ad-tour-grid" data-tour-list></div>
+        </div>
+        <div data-tour-editor hidden></div>
+      </section>
+
+      <!-- Blocked dates -->
+      <section class="ad-panel" data-panel="calendar" hidden>
+        <div class="ad-panel-head">
+          <div>
+            <h2>Blocked dates</h2>
+            <p class="ad-muted">Days a tour is not running (holiday, fully booked, weather). Customers can't pick these days on the website.</p>
+          </div>
+        </div>
+        <form class="ad-card ad-add" data-block-form novalidate>
+          <h3>Block a date</h3>
+          <div class="ad-form-grid">
+            <label class="ad-field">From
+              <input type="date" required data-block-from />
+            </label>
+            <label class="ad-field">To (optional, for several days in a row)
+              <input type="date" data-block-to />
+            </label>
+            <label class="ad-field">Tour
+              <select data-block-tour></select>
+            </label>
+            <label class="ad-field">Reason (only the team sees this)
+              <input type="text" maxlength="200" placeholder="e.g. Fully booked" data-block-note />
+            </label>
+          </div>
+          <p class="ad-error" data-block-error hidden></p>
+          <button type="submit" class="ad-btn ad-btn-primary">Block</button>
+        </form>
+        <div class="ad-list" data-block-list></div>
+      </section>
+
+      <!-- Settings -->
+      <section class="ad-panel" data-panel="settings" hidden>
+        <div class="ad-panel-head">
+          <div>
+            <h2>Settings</h2>
+            <p class="ad-muted">Contact details, booking rules, the offer banner and emails.</p>
+          </div>
+        </div>
+        <form class="ad-card ad-settings" data-site-form novalidate>
+          <h3>Website</h3>
+          <div class="ad-form-grid">
+            <label class="ad-field">WhatsApp number (with country code)
+              <input type="tel" placeholder="971586272827" data-set-whatsapp />
+            </label>
+            <label class="ad-field">Phone shown on the site (optional)
+              <input type="tel" placeholder="+971 58 627 2827" data-set-phone />
+            </label>
+            <label class="ad-field">Email shown on the site (optional)
+              <input type="email" placeholder="hello@nxttours.com" data-set-email />
+            </label>
+            <label class="ad-field">Bookings for tomorrow close at (Dubai time)
+              <select data-set-cutoff></select>
+            </label>
+          </div>
+          <label class="ad-switch"><input type="checkbox" data-set-offer-on /> <span>Show an offer banner at the top of every page</span></label>
+          <label class="ad-field">Offer banner text (up to 160 characters)
+            <input type="text" maxlength="160" placeholder="e.g. 10% off the Abu Dhabi City Tour this week" data-set-offer-text />
+          </label>
+          <p class="ad-error" data-site-error hidden></p>
+          <button type="submit" class="ad-btn ad-btn-primary">Save website settings</button>
+        </form>
+
+        <form class="ad-card ad-settings" data-email-form novalidate>
+          <h3>Emails</h3>
+          <p class="ad-muted">The booking confirmation to the customer is always sent. Switch the others on once the company mailbox is ready.</p>
+          <label class="ad-field">Team email for new-booking alerts (for several, separate with commas)
+            <input type="text" placeholder="hello@nxttours.com" data-set-team />
+          </label>
+          <div class="ad-switches">
+            <label class="ad-switch"><input type="checkbox" data-set-team-on /> <span><strong>New booking alert</strong> to the team email above</span></label>
+            <label class="ad-switch"><input type="checkbox" data-set-status-on /> <span><strong>Status update</strong> to the customer when you mark a booking Confirmed or Cancelled</span></label>
+            <label class="ad-switch"><input type="checkbox" data-set-reminder-on /> <span><strong>Reminder</strong> to the customer the day before the tour (sent at 10 AM)</span></label>
+            <label class="ad-switch"><input type="checkbox" data-set-review-on /> <span><strong>Review request</strong> to the customer the day after the tour (sent at 10 AM)</span></label>
+          </div>
+          <p class="ad-error" data-email-error hidden></p>
+          <div class="ad-row-actions">
+            <button type="submit" class="ad-btn ad-btn-primary">Save email settings</button>
+            <button type="button" class="ad-btn ad-btn-ghost" data-email-test>Send a test alert to the team email</button>
+          </div>
+        </form>
+      </section>
+
+      <!-- Activity -->
+      <section class="ad-panel" data-panel="activity" hidden>
+        <div class="ad-panel-head">
+          <div>
+            <h2>Activity</h2>
+            <p class="ad-muted">Who changed what, newest first (last 300 changes).</p>
+          </div>
+          <button type="button" class="ad-btn ad-btn-ghost" data-activity-refresh>Refresh</button>
+        </div>
+        <div class="ad-list" data-activity-list></div>
+      </section>
+
       <!-- Team -->
       <section class="ad-panel" data-panel="team" hidden>
         <div class="ad-panel-head">
@@ -129,8 +268,8 @@
           </div>
         </div>
         <div class="ad-roles-help">
-          <p><strong>Owner:</strong> everything, including adding and removing people.</p>
-          <p><strong>Editor:</strong> bookings and reviews.</p>
+          <p><strong>Owner:</strong> everything, including settings and adding or removing people.</p>
+          <p><strong>Editor:</strong> bookings, reviews, tours and blocked dates.</p>
           <p><strong>Reviewer:</strong> reviews only.</p>
         </div>
         <form class="ad-card ad-add" data-team-add novalidate>
@@ -187,10 +326,59 @@
     </main>
   </div>
 
+  <!-- Add a booking by hand (WhatsApp / phone bookings) -->
+  <dialog class="ad-dialog" data-manual-dialog aria-labelledby="manual-title">
+    <form class="ad-dialog-card" data-manual-form novalidate>
+      <div class="ad-dialog-head">
+        <h3 id="manual-title">Add a booking</h3>
+        <button type="button" class="ad-btn ad-btn-ghost ad-btn-sm" data-manual-close>Close</button>
+      </div>
+      <p class="ad-muted">For bookings that came in on WhatsApp or by phone, so everything is in one list.</p>
+      <div class="ad-form-grid">
+        <label class="ad-field">Tour
+          <select required data-m-tour></select>
+        </label>
+        <label class="ad-field">Option
+          <select required data-m-option></select>
+        </label>
+        <label class="ad-field">Travel date
+          <input type="date" required data-m-date />
+        </label>
+        <label class="ad-field" data-m-persons-field>Persons
+          <input type="number" min="1" max="60" value="1" data-m-persons />
+        </label>
+        <label class="ad-field ad-span-2">Pickup point or hotel
+          <input type="text" maxlength="200" required data-m-pickup />
+        </label>
+        <label class="ad-field">Customer name
+          <input type="text" maxlength="80" required data-m-name />
+        </label>
+        <label class="ad-field">Mobile / WhatsApp
+          <input type="tel" maxlength="30" data-m-phone />
+        </label>
+        <label class="ad-field">Email (optional)
+          <input type="email" maxlength="120" data-m-email />
+        </label>
+        <label class="ad-field">Status
+          <select data-m-status>
+            <option value="confirmed">Confirmed</option>
+            <option value="new">New</option>
+          </select>
+        </label>
+        <label class="ad-field ad-span-2">Team notes (optional)
+          <textarea class="ad-notes" maxlength="1000" data-m-notes></textarea>
+        </label>
+      </div>
+      <p class="ad-error" data-manual-error hidden></p>
+      <button type="submit" class="ad-btn ad-btn-primary ad-btn-block">Save booking</button>
+    </form>
+  </dialog>
+
   <div class="ad-toast" data-toast role="status" aria-live="polite" hidden></div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-  <script src="js/config.js?v=20261005e"></script>
-  <script src="js/admin.js?v=20261005e"></script>
+  <script src="js/config.js?v=20261005f"></script>
+  <script src="js/admin.js?v=20261005f"></script>
+  <script src="js/admin-tours.js?v=20261005f"></script>
 </body>
 </html>
