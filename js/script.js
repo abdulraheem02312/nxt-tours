@@ -92,7 +92,7 @@ if (yearEl) {
 // Contact form: there is no backend, so pressing the button opens WhatsApp
 // (the client's number) with the whole inquiry already typed into the message.
 // The visitor just presses Send there. Nothing is sent until they do.
-const WHATSAPP_NUMBER = "971586272827";
+let WHATSAPP_NUMBER = "971586272827"; // replaced by the number saved in the admin panel, if different
 
 // Settings the team can change in the admin panel. These are the defaults; they are replaced by
 // the saved values when the live data loads (see loadLiveData further down).
@@ -892,6 +892,97 @@ const REVIEWS = [
   { name: "Bi N.", date: "26 May 2025", tours: [], text: "I wanted to express my heartfelt gratitude for the exceptional service your team NXT Tours provided during our recent tour. Your guide was knowledgeable, friendly, and made the experience truly unforgettable. Thank you for your professionalism and dedication. We highly recommend your company to anyone looking for a memorable experience. Keep up great work." },
   { name: "Reny J.", date: "24 May 2025", tours: [], text: "Excellent service. Treated us well and informed about the places and timings well ahead. Mr. Muhammed did a fantastic job throughout our journey. He patiently handled all the passengers. Recommended one" }
 ];
+
+// =========================================================
+// Live data from the admin panel (Supabase): tours, site settings and blocked dates.
+// The TOURS object above stays as the BACKUP: if the database is slow (over 3.5 s) or down,
+// the site simply uses the built-in data, so it never breaks. Everything that draws tours
+// (price sync, cards, sliders, the tour page) runs in startToursUI() once this has finished.
+// =========================================================
+const HIDDEN_TOURS = new Set(); // tours switched off in the admin panel
+
+async function loadLiveData() {
+  if (typeof BACKEND === "undefined" || !BACKEND.key) return;
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), 3500);
+  const get = (path) =>
+    fetch(BACKEND.url + "/rest/v1/" + path, { headers: { apikey: BACKEND.key }, signal: ctrl.signal }).then((r) => {
+      if (!r.ok) throw new Error(path + " " + r.status);
+      return r.json();
+    });
+  const dubaiToday = new Date(Date.now() + 4 * 3600e3).toISOString().slice(0, 10);
+  try {
+    const [tours, settings, blocked] = await Promise.all([
+      get("tours?select=slug,data,sort&order=sort"),
+      get("site_settings?select=cutoff_hour,whatsapp,phone,email,offer_on,offer_text&id=eq.1"),
+      get("blocked_dates?select=date,tour_slug&date=gte." + dubaiToday),
+    ]);
+    if (tours.length) {
+      const live = new Set(tours.map((t) => t.slug));
+      Object.keys(TOURS).forEach((slug) => {
+        if (!live.has(slug)) {
+          HIDDEN_TOURS.add(slug);
+          delete TOURS[slug];
+        }
+      });
+      tours.forEach((t) => {
+        if (t.data && t.data.name) TOURS[t.slug] = t.data;
+      });
+    }
+    SITE.blocked = blocked;
+    const st = settings[0];
+    if (st) applySiteSettings(st);
+  } catch (err) {
+    console.warn("Live tour data not loaded, using the built-in data", err);
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+function applySiteSettings(st) {
+  if (Number.isInteger(st.cutoff_hour)) SITE.cutoffHour = st.cutoff_hour;
+  const wa = String(st.whatsapp || "").replace(/D/g, "");
+  if (wa.length >= 8 && wa !== WHATSAPP_NUMBER) {
+    document.querySelectorAll('a[href*="wa.me/' + WHATSAPP_NUMBER + '"]').forEach((a) => {
+      a.href = a.href.replace("wa.me/" + WHATSAPP_NUMBER, "wa.me/" + wa);
+    });
+    WHATSAPP_NUMBER = wa;
+  }
+  const phone = String(st.phone || "").trim();
+  if (phone) {
+    document.querySelectorAll('a[href^="tel:"]').forEach((a) => {
+      a.href = "tel:" + phone.replace(/[^d+]/g, "");
+      const label = a.querySelector("span") || a;
+      label.textContent = phone;
+    });
+  }
+  const email = String(st.email || "").trim();
+  if (email) {
+    document.querySelectorAll('a[href^="mailto:"]').forEach((a) => {
+      a.href = "mailto:" + email;
+      const label = a.querySelector("span") || a;
+      label.textContent = email;
+    });
+  }
+  // Offer banner: a thin strip at the top of every page, switched on in the admin panel
+  if (st.offer_on && st.offer_text && navbar) {
+    const bar = document.createElement("div");
+    bar.className = "offer-bar";
+    bar.textContent = st.offer_text;
+    navbar.prepend(bar);
+    document.body.classList.add("has-offer");
+  }
+}
+
+// Hide cards and sections of tours that are switched off
+const hideTourCards = () => {
+  HIDDEN_TOURS.forEach((slug) => {
+    document.querySelectorAll('[data-tour="' + slug + '"], [data-spotlight-tour="' + slug + '"]').forEach((el) => (el.hidden = true));
+  });
+};
+
+function startToursUI() {
+hideTourCards();
 
 // =========================================================
 // Price sync: fill every price element from the TOURS object so
@@ -2292,6 +2383,10 @@ if (tourPage) {
       if (e.target === rvDialog) rvDialog.close();
     });
     rvDialog.addEventListener("close", () => document.body.classList.remove("modal-open"));
+    // Link from the "How was your tour?" email (…&review=1): open the review form straight away
+    if (new URLSearchParams(location.search).get("review") === "1") {
+      rv.querySelector("[data-rv-write]").click();
+    }
     rvForm.addEventListener("submit", async (e) => {
       e.preventDefault();
       const name = q("[data-rv-name]").value.trim();
@@ -2780,3 +2875,6 @@ if (tourPage) {
     fitSticky();
   }
 }
+} // end of startToursUI
+
+loadLiveData().then(startToursUI);

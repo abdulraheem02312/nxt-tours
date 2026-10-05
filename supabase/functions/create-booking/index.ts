@@ -5,21 +5,23 @@
 //   SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY  - provided by Supabase automatically
 //   RESEND_API_KEY   - from the client's Resend account (emails are skipped until it is set)
 //   BOOKING_FROM     - e.g. "NXT Tours <bookings@clientdomain.com>" (a verified Resend domain)
-//   TEAM_EMAILS      - who gets the "new booking" alert, comma separated
+//   TEAM_EMAILS      - old fallback for the team alert address; now set in the admin panel
+//                      (Site settings > Emails), where the alert is also switched on/off
 //   SITE_URL         - public website address, used for the logo in emails
 //   ALLOWED_ORIGINS  - optional, comma separated website addresses allowed to call this function
 
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { customerEmail, teamEmail, type Booking } from "../_shared/emails.ts";
+import { canSend, emailSettings, sendEmail, siteConfig } from "../_shared/mail.ts";
 
-const TOURS: Record<string, { name: string; code: string }> = {
+// Short codes used in booking references (NXT-AD-...). Tours added later get a code from their slug.
+const CODES: Record<string, { name: string; code: string }> = {
   "abu-dhabi": { name: "Abu Dhabi City Tour", code: "AD" },
   "dubai": { name: "Dubai City Tour", code: "DXB" },
   "hatta": { name: "Hatta City Tour", code: "HT" },
   "desert-safari": { name: "Desert Safari", code: "DS" },
   "khorfakkan": { name: "Khorfakkan City Tour", code: "KF" },
 };
-const WHATSAPP = "971586272827";
 const MAX_PER_EMAIL_PER_HOUR = 5;
 
 const env = (k: string) => (Deno.env.get(k) || "").trim();
@@ -42,21 +44,12 @@ const text = (v: unknown, max: number) => String(v ?? "").replace(/\s+/g, " ").t
 
 // Today's date in Dubai (UTC+4, no daylight saving), as YYYY-MM-DD
 const dubaiDate = (offsetDays = 0) => new Date(Date.now() + 4 * 3600e3 + offsetDays * 86400e3).toISOString().slice(0, 10);
+const dubaiHour = () => new Date(Date.now() + 4 * 3600e3).getUTCHours();
 
 const REF_CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 function makeRef(code: string) {
   const bytes = crypto.getRandomValues(new Uint8Array(5));
   return "NXT-" + code + "-" + Array.from(bytes, (b) => REF_CHARS[b % REF_CHARS.length]).join("");
-}
-
-async function sendEmail(to: string[], subject: string, html: string, textBody: string, replyTo?: string) {
-  const res = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: { Authorization: "Bearer " + env("RESEND_API_KEY"), "Content-Type": "application/json" },
-    body: JSON.stringify({ from: env("BOOKING_FROM"), to, subject, html, text: textBody, reply_to: replyTo }),
-  });
-  if (!res.ok) console.error("Resend error", res.status, await res.text());
-  return res.ok;
 }
 
 Deno.serve(async (req) => {
@@ -76,8 +69,21 @@ Deno.serve(async (req) => {
   if (text(data.website, 100)) return reply(200, { ok: true, ref: "NXT-OK" }, origin);
 
   // ---- Validate ----
+  const db = createClient(env("SUPABASE_URL"), env("SUPABASE_SERVICE_ROLE_KEY"), { auth: { persistSession: false } });
   const slug = text(data.tour, 40);
-  const tour = TOURS[slug];
+  // The tour must exist and be switched on in the admin panel
+  const { data: row } = await db.from("tours").select("data").eq("slug", slug).eq("visible", true).maybeSingle();
+  const tour = row
+    ? {
+        name: CODES[slug]?.name || [row.data.name, row.data.accent].filter(Boolean).join(" "),
+        code: CODES[slug]?.code || slug.split("-").map((w) => w[0]).join("").toUpperCase().slice(0, 4),
+      }
+    : null;
+  // Same rules as the website's date picker: tomorrow closes at the cutoff hour (Dubai time),
+  // and days blocked in the admin panel can't be booked.
+  const { data: settings } = await db.from("site_settings").select("cutoff_hour").eq("id", 1).maybeSingle();
+  const cutoff = Number.isInteger(settings?.cutoff_hour) ? settings!.cutoff_hour : 18;
+  const earliest = dubaiDate(dubaiHour() >= cutoff ? 2 : 1);
   const optionKind = data.optionKind === "private" ? "private" : data.optionKind === "sharing" ? "sharing" : "";
   const optionText = text(data.optionText, 120);
   const travelDate = text(data.date, 10);
@@ -90,7 +96,7 @@ Deno.serve(async (req) => {
   const problems: string[] = [];
   if (!tour) problems.push("tour");
   if (!optionKind || !optionText) problems.push("tour option");
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(travelDate) || travelDate < dubaiDate(1) || travelDate > dubaiDate(366)) problems.push("date");
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(travelDate) || travelDate < earliest || travelDate > dubaiDate(366)) problems.push("date");
   if (!pickup) problems.push("pickup");
   if (name.length < 2) problems.push("name");
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) problems.push("email");
@@ -98,7 +104,9 @@ Deno.serve(async (req) => {
   if (optionKind === "sharing" && !(persons! >= 1 && persons! <= 60)) problems.push("persons");
   if (problems.length) return reply(400, { ok: false, error: "Please check: " + problems.join(", ") }, origin);
 
-  const db = createClient(env("SUPABASE_URL"), env("SUPABASE_SERVICE_ROLE_KEY"), { auth: { persistSession: false } });
+  const { count: blockedCount } = await db.from("blocked_dates").select("id", { count: "exact", head: true })
+    .eq("date", travelDate).or("tour_slug.is.null,tour_slug.eq." + slug);
+  if (blockedCount) return reply(400, { ok: false, error: "Sorry, this tour is not available on that date. Please choose another day." }, origin);
 
   // ---- Spam limit: a handful of bookings per email per hour ----
   const since = new Date(Date.now() - 3600e3).toISOString();
@@ -110,11 +118,11 @@ Deno.serve(async (req) => {
   // ---- Save (retry if the random reference already exists) ----
   let ref = "";
   for (let attempt = 0; attempt < 4 && !ref; attempt++) {
-    const candidate = makeRef(tour.code);
+    const candidate = makeRef(tour!.code);
     const { error } = await db.from("bookings").insert({
       ref: candidate,
       tour_slug: slug,
-      tour_name: tour.name,
+      tour_name: tour!.name,
       option_kind: optionKind,
       option_text: optionText,
       travel_date: travelDate,
@@ -133,18 +141,20 @@ Deno.serve(async (req) => {
   if (!ref) return reply(500, { ok: false, error: "Could not save the booking" }, origin);
 
   // ---- Emails (skipped until Resend is set up) ----
+  // The customer always gets the confirmation. The team alert only goes out once it is switched
+  // on in the admin panel with an address filled in.
   let emailSent = false;
-  if (env("RESEND_API_KEY") && env("BOOKING_FROM")) {
+  if (canSend()) {
     const booking: Booking = {
-      ref, tourName: tour.name, optionText, optionKind, travelDate, pickup, persons, name, email, phone,
+      ref, tourName: tour!.name, optionText, optionKind, travelDate, pickup, persons, name, email, phone,
     };
-    const cfg = { siteUrl: env("SITE_URL") || "https://abdulraheem02312.github.io/nxt-tours", whatsapp: WHATSAPP };
+    const cfg = await siteConfig(db);
     const c = customerEmail(booking, cfg);
     emailSent = await sendEmail([email], c.subject, c.html, c.text);
-    const team = env("TEAM_EMAILS").split(",").map((s) => s.trim()).filter(Boolean);
-    if (team.length) {
+    const es = await emailSettings(db);
+    if (es.teamAlertOn && es.team.length) {
       const t = teamEmail(booking, cfg);
-      await sendEmail(team, t.subject, t.html, t.text, email);
+      await sendEmail(es.team, t.subject, t.html, t.text, email);
     }
     if (emailSent) await db.from("bookings").update({ emails_sent: true }).eq("ref", ref);
   }

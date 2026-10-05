@@ -183,3 +183,83 @@ export function teamEmail(b: Booking, cfg: EmailConfig) {
   ].filter(Boolean).join("\n");
   return { subject, html: shell(cfg, `${b.name}, ${b.tourName}, ${niceDate(b.travelDate)}`, body), text };
 }
+
+// ---------- Customer: booking confirmed / cancelled (sent when the team changes the status) ----------
+export function statusEmail(b: Booking, status: "confirmed" | "cancelled", cfg: EmailConfig) {
+  const waLink = wa(cfg.whatsapp, `Hello NXT Tours! My booking reference is ${b.ref}.`);
+  const ok = status === "confirmed";
+  const subject = ok
+    ? `Booking confirmed: ${b.tourName} on ${niceDate(b.travelDate)} (${b.ref})`
+    : `Booking cancelled: ${b.tourName} on ${niceDate(b.travelDate)} (${b.ref})`;
+  const body = `
+      <tr><td style="padding:32px 32px 8px;">
+        <div style="display:inline-block;padding:5px 12px;border-radius:999px;background:${ok ? ORANGE : MUTED};color:#FFFFFF;font-size:12px;font-weight:700;letter-spacing:1px;">${ok ? "CONFIRMED" : "CANCELLED"}</div>
+        <h1 style="margin:12px 0 12px;color:${INK};font-size:24px;line-height:1.3;">${ok ? "You're all set" : "Your booking was cancelled"}, ${esc(b.name.split(" ")[0])}.</h1>
+        <p style="margin:0;color:${MUTED};font-size:15px;line-height:1.6;">
+          ${ok
+            ? "Your booking is confirmed. Please be ready at your pickup point at the start of your time window."
+            : "Your booking below has been cancelled. If this is a mistake or you would like another date, message us on WhatsApp and we will help."}
+        </p>
+      </td></tr>
+      <tr><td style="padding:16px 32px 0;">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0">${row("Reference", b.ref)}${summaryRows(b)}</table>
+      </td></tr>
+      <tr><td align="center" style="padding:26px 32px 32px;">
+        ${button(waLink, "Chat with us on WhatsApp", "#25D366")}
+      </td></tr>`;
+  const text = [
+    ok ? `Your booking ${b.ref} is confirmed.` : `Your booking ${b.ref} has been cancelled.`,
+    `Tour: ${b.tourName}`,
+    `Date: ${niceDate(b.travelDate)}`,
+    `Pickup: ${b.pickup}`,
+    `WhatsApp us: ${waLink}`,
+  ].join("\n");
+  return { subject, html: shell(cfg, ok ? `See you on ${niceDate(b.travelDate)}.` : `Booking ${b.ref} was cancelled.`, body), text };
+}
+
+// ---------- Customer: reminder the day before the tour ----------
+export function reminderEmail(b: Booking, cfg: EmailConfig) {
+  const waLink = wa(cfg.whatsapp, `Hello NXT Tours! My booking reference is ${b.ref}, my tour is tomorrow.`);
+  const subject = `Tomorrow: your ${b.tourName} (${b.ref})`;
+  const body = `
+      <tr><td style="padding:32px 32px 8px;">
+        <div style="color:${CRIMSON};font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;">Your tour is tomorrow</div>
+        <h1 style="margin:8px 0 12px;color:${INK};font-size:24px;line-height:1.3;">Get ready, ${esc(b.name.split(" ")[0])}!</h1>
+        <p style="margin:0;color:${MUTED};font-size:15px;line-height:1.6;">
+          Please be at your pickup point at the start of your time window. Bring water, sunglasses, comfortable shoes and your phone charged.
+        </p>
+      </td></tr>
+      <tr><td style="padding:16px 32px 0;">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0">${row("Reference", b.ref)}${summaryRows(b)}</table>
+      </td></tr>
+      <tr><td align="center" style="padding:26px 32px 32px;">
+        <div style="color:${MUTED};font-size:14px;margin-bottom:14px;">Running late or need to change something? Tell us now.</div>
+        ${button(waLink, "Message us on WhatsApp", "#25D366")}
+      </td></tr>`;
+  const text = [
+    `Your ${b.tourName} is tomorrow, ${niceDate(b.travelDate)}.`,
+    `Reference: ${b.ref}`,
+    `Pickup: ${b.pickup}`,
+    "Please be at your pickup point at the start of your time window.",
+    `WhatsApp us: ${waLink}`,
+  ].join("\n");
+  return { subject, html: shell(cfg, `Pickup: ${b.pickup}`, body), text };
+}
+
+// ---------- Customer: "how was it?" the day after the tour ----------
+export function reviewRequestEmail(b: Booking & { tourSlug: string }, cfg: EmailConfig) {
+  const link = `${cfg.siteUrl}/tour.html?t=${encodeURIComponent(b.tourSlug)}&review=1`;
+  const subject = `How was your ${b.tourName}?`;
+  const body = `
+      <tr><td style="padding:32px 32px 8px;">
+        <h1 style="margin:0 0 12px;color:${INK};font-size:24px;line-height:1.3;">Thank you for travelling with us, ${esc(b.name.split(" ")[0])}!</h1>
+        <p style="margin:0;color:${MUTED};font-size:15px;line-height:1.6;">
+          We hope you loved the ${esc(b.tourName)}. Could you spare one minute to tell other travellers how it was? It helps our small team a lot.
+        </p>
+      </td></tr>
+      <tr><td align="center" style="padding:26px 32px 32px;">
+        ${button(link, "Write a review", CRIMSON)}
+      </td></tr>`;
+  const text = [`Thank you for travelling with NXT Tours, ${b.name}!`, `Please leave a short review: ${link}`].join("\n");
+  return { subject, html: shell(cfg, "One minute to tell other travellers how it was?", body), text };
+}
