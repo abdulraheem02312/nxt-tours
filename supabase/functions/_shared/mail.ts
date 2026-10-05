@@ -39,7 +39,7 @@ export async function emailSettings(db: SupabaseClient): Promise<EmailSettings> 
 export const siteConfig = async (db: SupabaseClient) => {
   const { data } = await db.from("site_settings").select("whatsapp").eq("id", 1).maybeSingle();
   return {
-    siteUrl: env("SITE_URL") || "https://abdulraheem02312.github.io/nxt-tours",
+    siteUrl: env("SITE_URL") || "https://nxttours.com",
     whatsapp: String(data?.whatsapp || "971586272827").replace(/\D/g, ""),
   };
 };
