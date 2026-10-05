@@ -7562,6 +7562,53 @@ button.btn {
   transform: rotate(-135deg) translateY(-3px);
 }
 
+/* Opening / closing slide (script.js sets the height); the arrow turns back as soon as it starts closing */
+.tl-pickup-body {
+  overflow: hidden;
+  transition: height 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.tl-pickup.is-closing summary::after {
+  transform: rotate(45deg) translateY(-3px);
+}
+
+/* The rows fade and slide in one after another while it opens */
+.tl-pickup[open]:not(.is-closing) .tl-pickup-note,
+.tl-pickup[open]:not(.is-closing) tbody tr {
+  animation: pickup-row-in 0.45s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.tl-pickup[open]:not(.is-closing) tbody tr:nth-child(n + 2) { animation-delay: 0.04s; }
+.tl-pickup[open]:not(.is-closing) tbody tr:nth-child(n + 4) { animation-delay: 0.08s; }
+.tl-pickup[open]:not(.is-closing) tbody tr:nth-child(n + 6) { animation-delay: 0.12s; }
+.tl-pickup[open]:not(.is-closing) tbody tr:nth-child(n + 8) { animation-delay: 0.16s; }
+.tl-pickup[open]:not(.is-closing) tbody tr:nth-child(n + 10) { animation-delay: 0.2s; }
+.tl-pickup[open]:not(.is-closing) tbody tr:nth-child(n + 12) { animation-delay: 0.24s; }
+
+.tl-pickup.is-closing .tl-pickup-body {
+  opacity: 0.4;
+  transition: height 0.45s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.45s ease;
+}
+
+@keyframes pickup-row-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tl-pickup-body,
+  .tl-pickup summary::after {
+    transition: none;
+  }
+
+  .tl-pickup[open] .tl-pickup-note,
+  .tl-pickup[open] tbody tr {
+    animation: none;
+  }
+}
+
 .tl-pickup-note {
   padding: 0 1.1rem 0.6rem;
   font-size: 0.8rem;

@@ -2086,8 +2086,8 @@ if (tourPage) {
         det.className = "tl-pickup";
         det.innerHTML =
           "<summary>" + svg(ICON_VAN) + "<span></span></summary>" +
-          '<p class="tl-pickup-note"></p>' +
-          '<table><thead><tr><th scope="col">Pickup point</th><th scope="col">Time</th></tr></thead><tbody></tbody></table>';
+          '<div class="tl-pickup-body"><p class="tl-pickup-note"></p>' +
+          '<table><thead><tr><th scope="col">Pickup point</th><th scope="col">Time</th></tr></thead><tbody></tbody></table></div>';
         det.querySelector("summary span").textContent = "See all " + count + " pickup points and times, by area";
         det.querySelector(".tl-pickup-note").textContent = tour.pickupNote || "";
         const tbody = det.querySelector("tbody");
@@ -2104,6 +2104,38 @@ if (tourPage) {
             tr.children[1].textContent = time;
             tbody.appendChild(tr);
           });
+        });
+        // Open / close with a smooth slide: animate to the MEASURED height (never "auto"),
+        // then clear it so the list can still grow or shrink with the screen width
+        const pkBody = det.querySelector(".tl-pickup-body");
+        det.querySelector("summary").addEventListener("click", (e) => {
+          if (noMotion) return;
+          e.preventDefault();
+          if (det.classList.contains("is-animating")) return;
+          det.classList.add("is-animating");
+          let safety = 0;
+          const done = (ev) => {
+            if (ev.target !== pkBody || ev.propertyName !== "height") return;
+            clearTimeout(safety);
+            pkBody.removeEventListener("transitionend", done);
+            if (det.classList.contains("is-closing")) det.open = false;
+            det.classList.remove("is-animating", "is-closing");
+            pkBody.style.height = "";
+          };
+          pkBody.addEventListener("transitionend", done);
+          // If the browser skips the animation (tab in the background), finish anyway
+          safety = setTimeout(() => done({ target: pkBody, propertyName: "height" }), 800);
+          if (det.open) {
+            det.classList.add("is-closing");
+            pkBody.style.height = pkBody.scrollHeight + "px";
+            pkBody.getBoundingClientRect(); // apply the start height before animating
+            pkBody.style.height = "0px";
+          } else {
+            det.open = true;
+            pkBody.style.height = "0px";
+            pkBody.getBoundingClientRect();
+            pkBody.style.height = pkBody.scrollHeight + "px";
+          }
         });
         section.appendChild(det);
       }
