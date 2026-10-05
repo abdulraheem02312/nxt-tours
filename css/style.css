@@ -1145,6 +1145,18 @@ img {
   }
 }
 
+/* Phones: the tall photos are bright and fresh, so only a soft neutral shade behind the text,
+   and no crimson tint on top (it made the photos look dull and purple) */
+@media (max-width: 700px) {
+  .hero-bg::after {
+    background: none;
+  }
+
+  .hero-bg::before {
+    background: linear-gradient(180deg, rgba(0, 0, 0, 0.12) 0%, rgba(0, 0, 0, 0.34) 28%, rgba(0, 0, 0, 0.34) 62%, rgba(0, 0, 0, 0) 100%);
+  }
+}
+
 /* Small letter-spaced label above the headline */
 .hero-h1-top {
   display: block;
