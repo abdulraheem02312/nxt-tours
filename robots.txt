@@ -1,0 +1,4 @@
+User-agent: *
+Disallow: /admin.html
+
+Sitemap: https://abdulraheem02312.github.io/nxt-tours/sitemap.xml

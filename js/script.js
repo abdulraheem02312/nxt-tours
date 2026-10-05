@@ -1670,6 +1670,11 @@ if (tourPage) {
     const q = (sel) => document.querySelector(sel);
 
     document.title = tour.name + " " + tour.accent + " | NXT Tours Dubai";
+    // Google reads the page after this script runs, so each tour gets its own description
+    const metaDesc = document.querySelector('meta[name="description"]');
+    if (metaDesc && tour.intro) metaDesc.content = tour.intro.length > 158 ? tour.intro.slice(0, 155).replace(/\s+\S*$/, "") + "..." : tour.intro;
+    const canon = document.querySelector('link[rel="canonical"]');
+    if (canon) canon.href = canon.href.replace(/\?t=[^&]*/, "?t=" + encodeURIComponent(slug));
 
     q("[data-tour-crumb]").textContent = tour.name + " " + tour.accent;
     q("[data-tour-badge]").textContent = tour.type;
