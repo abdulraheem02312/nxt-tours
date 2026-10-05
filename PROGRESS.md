@@ -2,7 +2,16 @@
 
 Update this file at the end of every work session (newest first).
 
-## Status (2026-10-05)
+## Status (2026-10-05, evening)
+
+### Done later on 2026-10-05 (on `dev`, NOT live, Abdullah said keep it off live for now)
+- Phones: tall hero photos for phones (`images/hero/hero-m-*`), Book Now bar + pop-up booking form on the tour page (no form at the bottom), timeline cards rise from below so nothing is cut at the screen edge.
+- Blocked dates: month calendar in the panel. Tap any days (orange) to block, tap red days to unblock, one Save. Days blocked for all tours show locked when one tour is selected. From-To stays for long stretches.
+- Cards + Home feature boxes now follow the panel (name, type, card text, first 3 highlights, price, photo; feature box tagline, text, list). New editor section "Cards and home page". Card texts copied into the database (`cardText`, `spotlight`).
+- Activity log shows old → new values ("Price: AED 69.99 → AED 100.99"), skips empty saves, keeps the newest 2,000, shows 30 at a time with Load more, filters by person and type. Bookings list also 30 at a time.
+- Tested every tour field one by one on Home, Tours and the tour page; all test data removed.
+
+### Earlier on 2026-10-05
 
 ### Done on 2026-10-05 (on `dev`, NOT live yet, waiting for Abdullah's review)
 - **Website fixes**: tour page photos swipe on phones (1 / 14 counter + dots); home card caption no longer overlaps the dots; hero text readable (dark fade behind it) and the button lines up with the text; nav bar has no background at the top of every page, glass only after scrolling; Facebook logo round and Facebook blue, "98% recommend" opens Facebook in a new tab; About/Contact pickup wording fixed.

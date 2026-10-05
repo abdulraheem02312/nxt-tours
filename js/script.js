@@ -995,9 +995,35 @@ hideTourCards();
 (function syncPrices() {
   const fmt = (n) => "AED " + (Number.isInteger(n) ? n : n.toFixed(2));
 
+  // Text from the admin panel replaces the text written in the page. data-i18n is removed from
+  // those elements, so the language switcher does not put the old built-in wording back.
+  const setText = (el, text) => {
+    if (!el || text == null || text === "") return;
+    el.textContent = text;
+    el.removeAttribute("data-i18n");
+  };
+  const setList = (ul, items) => {
+    if (!ul || !Array.isArray(items) || !items.length) return;
+    ul.textContent = "";
+    items.forEach((t) => {
+      const li = document.createElement("li");
+      li.textContent = t;
+      ul.appendChild(li);
+    });
+  };
+
   document.querySelectorAll("[data-spotlight-tour]").forEach((section) => {
     const tour = TOURS[section.dataset.spotlightTour];
     if (!tour) return;
+    // Home page feature box: name, tagline, text and list
+    const h2spans = section.querySelectorAll("h2 > span");
+    setText(h2spans[0], tour.name);
+    setText(h2spans[1], tour.accent);
+    if (tour.spotlight) {
+      setText(section.querySelector(".spotlight-tagline"), tour.spotlight.tagline);
+      setText(section.querySelector(".spotlight-desc"), tour.spotlight.desc);
+      setList(section.querySelector(".spotlight-list"), tour.spotlight.list);
+    }
     const el = section.querySelector(".spotlight-price");
     if (!el) return;
     el.innerHTML = fmt(tour.price) + (tour.was ? ' <del class="was">AED ' + tour.was + "</del>" : "");
@@ -1006,6 +1032,14 @@ hideTourCards();
   document.querySelectorAll(".tour-card[data-tour], .tour-wide[data-tour]").forEach((card) => {
     const tour = TOURS[card.dataset.tour];
     if (!tour) return;
+    // Card name, type badge, short text and the first 3 highlights
+    const fullName = [tour.name, tour.accent].filter(Boolean).join(" ");
+    setText(card.querySelector(".tour-body h3"), fullName);
+    setText(card.querySelector(".tour-type-badge"), tour.type);
+    setText(card.querySelector(".tour-body > p"), tour.cardText);
+    setList(card.querySelector(".tour-body ul"), (tour.points || []).slice(0, 3));
+    const wa = card.querySelector('a[href*="wa.me/"]');
+    if (wa) wa.href = wa.href.replace(/\?text=.*/, "?text=" + encodeURIComponent("Hello NXT Tours! I'd like to book the " + fullName + "."));
     // Card photo = the tour page's main photo, so both always match
     const img = card.querySelector(".tour-img-wrap img");
     if (img && tour.photos && tour.photos[0]) {

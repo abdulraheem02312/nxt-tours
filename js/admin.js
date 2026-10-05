@@ -15,6 +15,7 @@
   let tours = []; // rows from the tours table: { slug, data, visible, sort, updated_at, updated_by }
   let emailCfg = null; // owner only
   let bookingFilter = "new";
+  let bookingsShown = 30; // how many booking cards are on screen ("Load more" adds 30)
   let reviewFilter = "pending";
   let knownBookingIds = null; // to spot new bookings between refreshes
 
@@ -237,7 +238,7 @@
 
   // ---------- bookings ----------
   async function loadBookings(quiet) {
-    const { data, error } = await sb.from("bookings").select("*").order("created_at", { ascending: false }).limit(2000);
+    const { data, error } = await sb.from("bookings").select("*").order("created_at", { ascending: false }).limit(10000);
     if (error) {
       if (!quiet) toast("Could not load bookings", true);
       return;
@@ -272,7 +273,12 @@
       box.appendChild(el("p", "ad-empty", $("[data-booking-search]").value.trim() ? "No bookings match your search." : "No bookings here yet."));
       return;
     }
-    list.forEach((b) => box.appendChild(bookingCard(b)));
+    // 30 at a time, so the page stays quick with thousands of bookings
+    list.slice(0, bookingsShown).forEach((b) => box.appendChild(bookingCard(b)));
+    box.appendChild(moreButton(list.length, bookingsShown, () => {
+      bookingsShown += PAGE;
+      renderBookings();
+    }));
   }
 
   function filteredBookings() {
@@ -391,12 +397,17 @@
   $$("[data-booking-filters] [data-status]").forEach((c) =>
     c.addEventListener("click", () => {
       bookingFilter = c.dataset.status;
+      bookingsShown = PAGE;
       $$("[data-booking-filters] [data-status]").forEach((x) => x.classList.toggle("is-active", x === c));
       renderBookings();
     })
   );
-  $("[data-booking-search]").addEventListener("input", renderBookings);
-  $("[data-booking-sort]").addEventListener("change", renderBookings);
+  const resetBookings = () => {
+    bookingsShown = PAGE;
+    renderBookings();
+  };
+  $("[data-booking-search]").addEventListener("input", resetBookings);
+  $("[data-booking-sort]").addEventListener("change", resetBookings);
 
   // ---- Download the current list as a spreadsheet (CSV opens in Excel / Google Sheets) ----
   $("[data-booking-csv]").addEventListener("click", () => {
@@ -660,17 +671,86 @@
   );
 
   // ---------- blocked dates ----------
+  // A month calendar: tap open days to mark them (orange), tap blocked days (red) to mark them for
+  // unblocking, then Save does all of it at once. Works per tour, or for "All tours".
+  let blockedRows = []; // upcoming blocked_dates rows
+  let bcalMonth = null; // first day of the month shown, as "YYYY-MM-01"
+  const toBlock = new Set();
+  const toUnblock = new Set(); // ids of rows to delete
+  const bcalTour = () => $("[data-block-tour]").value || null;
+
   async function loadBlocked() {
     $("[data-block-from]").min = $("[data-block-to]").min = dubaiISO();
     const { data, error } = await sb.from("blocked_dates").select("*").gte("date", dubaiISO()).order("date");
+    if (error) return toast("Could not load blocked dates", true);
+    blockedRows = data || [];
+    if (!bcalMonth) bcalMonth = dubaiISO().slice(0, 8) + "01";
+    renderBcal();
+    renderBlockedList();
+  }
+
+  function renderBcal() {
+    const tour = bcalTour();
+    const today = dubaiISO();
+    const first = new Date(bcalMonth + "T00:00:00Z");
+    $("[data-bcal-month]").textContent = first.toLocaleDateString("en-GB", { month: "long", year: "numeric", timeZone: "UTC" });
+    $("[data-bcal-prev]").disabled = bcalMonth <= today.slice(0, 8) + "01";
+    const grid = $("[data-bcal-grid]");
+    grid.textContent = "";
+    const lead = (first.getUTCDay() + 6) % 7; // Monday first
+    for (let i = 0; i < lead; i++) grid.appendChild(el("span"));
+    const days = new Date(Date.UTC(first.getUTCFullYear(), first.getUTCMonth() + 1, 0)).getUTCDate();
+    for (let n = 1; n <= days; n++) {
+      const iso = bcalMonth.slice(0, 8) + String(n).padStart(2, "0");
+      const own = blockedRows.find((r) => r.date === iso && r.tour_slug === tour); // blocked for the chosen tour
+      const all = tour && blockedRows.find((r) => r.date === iso && r.tour_slug === null); // blocked for every tour
+      const b = el("button", "ad-bday");
+      b.type = "button";
+      b.appendChild(el("span", null, String(n)));
+      const label = new Date(iso + "T00:00:00Z").toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long", timeZone: "UTC" });
+      if (iso < today) {
+        b.disabled = true;
+        b.classList.add("is-past");
+      } else if (all) {
+        b.disabled = true;
+        b.classList.add("is-all");
+        b.title = "Blocked for all tours" + (all.note ? ": " + all.note : "") + '. Choose "All tours" to change it.';
+      } else if (own) {
+        b.classList.add(toUnblock.has(own.id) ? "is-remove" : "is-blocked");
+        b.title = (own.note ? own.note + ". " : "") + "Tap to unblock";
+        b.addEventListener("click", () => {
+          toUnblock.has(own.id) ? toUnblock.delete(own.id) : toUnblock.add(own.id);
+          renderBcal();
+        });
+      } else {
+        if (toBlock.has(iso)) b.classList.add("is-new");
+        b.title = "Tap to block";
+        b.addEventListener("click", () => {
+          toBlock.has(iso) ? toBlock.delete(iso) : toBlock.add(iso);
+          renderBcal();
+        });
+      }
+      if (iso === today) b.classList.add("is-today");
+      b.setAttribute("aria-label", label);
+      b.setAttribute("aria-pressed", b.classList.contains("is-new") || b.classList.contains("is-remove") ? "true" : "false");
+      grid.appendChild(b);
+    }
+    const parts = [];
+    if (toBlock.size) parts.push(toBlock.size + (toBlock.size === 1 ? " day" : " days") + " to block");
+    if (toUnblock.size) parts.push(toUnblock.size + (toUnblock.size === 1 ? " day" : " days") + " to unblock");
+    $("[data-bcal-summary]").textContent = parts.length ? parts.join(", ") : "Tap the days you want to block.";
+    $("[data-bcal-save]").disabled = !parts.length;
+    $("[data-bcal-clear]").hidden = !parts.length;
+  }
+
+  function renderBlockedList() {
     const box = $("[data-block-list]");
     box.textContent = "";
-    if (error) return toast("Could not load blocked dates", true);
-    if (!data.length) {
-      box.appendChild(el("p", "ad-empty", "No blocked dates. Every day can be booked."));
+    if (!blockedRows.length) {
+      box.appendChild(el("p", "ad-empty", "No blocked days. Every day can be booked."));
       return;
     }
-    data.forEach((b) => {
+    blockedRows.forEach((b) => {
       const card = el("div", "ad-card ad-block-item");
       const who = el("div");
       who.appendChild(el("strong", null, fmtDate(b.date)));
@@ -683,7 +763,7 @@
       del.addEventListener("click", async () => {
         const { error: err } = await sb.from("blocked_dates").delete().eq("id", b.id);
         if (err) return toast("Could not unblock, please try again", true);
-        toast("Date unblocked");
+        toast("Day unblocked");
         loadBlocked();
       });
       card.appendChild(del);
@@ -691,27 +771,72 @@
     });
   }
 
+  const shiftMonth = (dir) => {
+    const d = new Date(bcalMonth + "T00:00:00Z");
+    d.setUTCMonth(d.getUTCMonth() + dir);
+    bcalMonth = d.toISOString().slice(0, 8) + "01";
+    renderBcal();
+  };
+  $("[data-bcal-prev]").addEventListener("click", () => shiftMonth(-1));
+  $("[data-bcal-next]").addEventListener("click", () => shiftMonth(1));
+  $("[data-block-tour]").addEventListener("change", () => {
+    // marks belong to one tour; switching tours starts fresh
+    toBlock.clear();
+    toUnblock.clear();
+    renderBcal();
+  });
+  $("[data-bcal-clear]").addEventListener("click", () => {
+    toBlock.clear();
+    toUnblock.clear();
+    renderBcal();
+  });
+  $("[data-bcal-save]").addEventListener("click", async (e) => {
+    const btn = e.currentTarget;
+    btn.disabled = true;
+    setError("[data-block-error]", "");
+    const tour = bcalTour();
+    const note = $("[data-block-note]").value.trim() || null;
+    let ok = true;
+    if (toBlock.size) {
+      const { error } = await sb.from("blocked_dates").insert([...toBlock].sort().map((date) => ({ date, tour_slug: tour, note })));
+      if (error) ok = false;
+    }
+    if (ok && toUnblock.size) {
+      const { error } = await sb.from("blocked_dates").delete().in("id", [...toUnblock]);
+      if (error) ok = false;
+    }
+    if (!ok) {
+      btn.disabled = false;
+      return setError("[data-block-error]", "Could not save. Please try again.");
+    }
+    const msg = [toBlock.size && toBlock.size + " blocked", toUnblock.size && toUnblock.size + " unblocked"].filter(Boolean).join(", ");
+    toBlock.clear();
+    toUnblock.clear();
+    toast("Saved: " + msg);
+    loadBlocked();
+  });
+
+  // Long stretch: every day from - to, for the tour chosen above
   $("[data-block-form]").addEventListener("submit", async (e) => {
     e.preventDefault();
     const from = $("[data-block-from]").value;
     const to = $("[data-block-to]").value || from;
-    const tour = $("[data-block-tour]").value || null;
+    const tour = bcalTour();
     const note = $("[data-block-note]").value.trim() || null;
-    if (!from) return setError("[data-block-error]", "Please choose a date.");
-    if (to < from) return setError("[data-block-error]", "The 'To' date is before the 'From' date.");
+    if (!from) return setError("[data-block-error]", "Please choose the first day.");
+    if (to < from) return setError("[data-block-error]", "The 'To' day is before the 'From' day.");
     const days = [];
     for (let d = new Date(from + "T00:00:00Z"); d <= new Date(to + "T00:00:00Z"); d.setUTCDate(d.getUTCDate() + 1)) days.push(d.toISOString().slice(0, 10));
     if (days.length > 92) return setError("[data-block-error]", "Please block at most 3 months at a time.");
     setError("[data-block-error]", "");
-    // skip days that are already blocked for the same tour
-    const { data: existing } = await sb.from("blocked_dates").select("date, tour_slug").in("date", days);
-    const taken = new Set((existing || []).filter((x) => x.tour_slug === tour).map((x) => x.date));
+    const taken = new Set(blockedRows.filter((x) => x.tour_slug === tour).map((x) => x.date));
     const rows = days.filter((d) => !taken.has(d)).map((date) => ({ date, tour_slug: tour, note }));
     if (!rows.length) return toast("Already blocked");
     const { error } = await sb.from("blocked_dates").insert(rows);
     if (error) return setError("[data-block-error]", "Could not save. Please try again.");
     $("[data-block-form]").reset();
-    toast(rows.length === 1 ? "Date blocked" : rows.length + " days blocked");
+    toast(rows.length === 1 ? "Day blocked" : rows.length + " days blocked");
+    bcalMonth = from.slice(0, 8) + "01";
     loadBlocked();
   });
 
@@ -801,29 +926,89 @@
   });
 
   // ---------- activity (owner) ----------
+  // The log keeps the newest 2,000 changes. They are loaded once and shown 30 at a time
+  // ("Load more" adds the next 30), with filters by person and by kind of change.
+  const PAGE = 30;
+  let activity = [];
+  let activityShown = PAGE;
+  const ACTIVITY_KINDS = {
+    tours: (a) => /tour/i.test(a.action),
+    bookings: (a) => /booking/i.test(a.action),
+    reviews: (a) => /review/i.test(a.action),
+    dates: (a) => /date/i.test(a.action),
+    settings: (a) => /settings/i.test(a.action),
+    team: (a) => /team/i.test(a.action),
+  };
+
   async function loadActivity() {
-    const { data, error } = await sb.from("activity_log").select("*").order("at", { ascending: false }).limit(300);
+    const { data, error } = await sb.from("activity_log").select("*").order("at", { ascending: false }).limit(2000);
+    if (error) return toast("Could not load the activity", true);
+    activity = data || [];
+    activityShown = PAGE;
+    const who = $("[data-activity-who]");
+    const keep = who.value;
+    who.textContent = "";
+    who.appendChild(new Option("Everyone", ""));
+    [...new Set(activity.map((a) => a.actor))].sort().forEach((p) => who.appendChild(new Option(p, p)));
+    who.value = keep;
+    renderActivity();
+  }
+
+  function renderActivity() {
+    const who = $("[data-activity-who]").value;
+    const kind = $("[data-activity-kind]").value;
+    const list = activity.filter((a) => (!who || a.actor === who) && (!kind || ACTIVITY_KINDS[kind](a)));
     const box = $("[data-activity-list]");
     box.textContent = "";
-    if (error) return toast("Could not load the activity", true);
-    if (!data.length) {
-      box.appendChild(el("p", "ad-empty", "Nothing yet. Changes made in this panel will show up here."));
+    if (!list.length) {
+      box.appendChild(el("p", "ad-empty", activity.length ? "No changes match these filters." : "Nothing yet. Changes made in this panel will show up here."));
       return;
     }
     const table = el("div", "ad-card ad-log");
-    data.forEach((a) => {
+    list.slice(0, activityShown).forEach((a) => {
       const r = el("div", "ad-log-row");
       r.appendChild(el("span", "ad-log-when", fmtTime(a.at)));
       r.appendChild(el("span", "ad-log-who", a.actor));
-      const what = el("span", "ad-log-what", a.action + (a.target ? ": " + a.target : ""));
-      const det = a.details ? Object.entries(a.details).map(([k, v]) => (v === true ? k : k + " " + v)).join(", ") : "";
-      if (det) what.appendChild(el("small", null, det));
+      const what = el("span", "ad-log-what");
+      what.appendChild(el("strong", null, a.action + (a.target ? ": " + a.target : "")));
+      const d = a.details;
+      // New entries: a list of readable lines. Older entries: { field: true } or { key: value }.
+      const lines = d && Array.isArray(d.changes) ? d.changes : d ? Object.entries(d).map(([k, v]) => (v === true ? k + " changed" : k + ": " + v)) : [];
+      if (lines.length) {
+        const ul = el("ul", "ad-log-changes");
+        lines.forEach((t) => ul.appendChild(el("li", null, t)));
+        what.appendChild(ul);
+      }
       r.appendChild(what);
       table.appendChild(r);
     });
     box.appendChild(table);
+    box.appendChild(moreButton(list.length, activityShown, () => {
+      activityShown += PAGE;
+      renderActivity();
+    }));
   }
+
+  // "Showing 30 of 412 · Load more" under a list
+  function moreButton(total, shown, onMore) {
+    const wrap = el("div", "ad-more");
+    wrap.appendChild(el("span", "ad-muted", "Showing " + Math.min(shown, total) + " of " + total));
+    if (shown < total) {
+      const b = el("button", "ad-btn ad-btn-ghost", "Load more");
+      b.type = "button";
+      b.addEventListener("click", onMore);
+      wrap.appendChild(b);
+    }
+    return wrap;
+  }
+
   $("[data-activity-refresh]").addEventListener("click", loadActivity);
+  ["[data-activity-who]", "[data-activity-kind]"].forEach((s) =>
+    $(s).addEventListener("change", () => {
+      activityShown = PAGE;
+      renderActivity();
+    })
+  );
 
   // ---------- team (owner only) ----------
   const loginUrl = () => location.origin + location.pathname;

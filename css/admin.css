@@ -189,6 +189,52 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .ad-switches { display: grid; gap: 0.1rem; margin: 0.3rem 0 0.6rem; }
 .ad-settings { margin-bottom: 1rem; }
 .ad-settings > .ad-muted { margin: -0.3rem 0 0.9rem; }
+/* ---------- Blocked dates calendar ---------- */
+.ad-bcal { margin-bottom: 1rem; }
+/* keep the month compact on wide screens (big empty boxes looked clumsy) */
+.ad-bcal-head, .ad-bcal-week, .ad-bcal-grid { max-width: 560px; }
+.ad-bcal-head { display: flex; align-items: center; justify-content: space-between; margin: 0.3rem 0 0.8rem; }
+.ad-bcal-head strong { font-family: var(--font-h); font-size: 1.1rem; }
+.ad-bcal-head .ad-icon-btn { width: 38px; height: 38px; font-size: 1.3rem; line-height: 1; }
+.ad-bcal-head .ad-icon-btn:disabled { opacity: 0.35; cursor: default; }
+.ad-bcal-week, .ad-bcal-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; }
+.ad-bcal-week { margin-bottom: 6px; }
+.ad-bcal-week span { text-align: center; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.4px; text-transform: uppercase; color: var(--muted); }
+.ad-bcal-week span:nth-child(5), .ad-bcal-week span:nth-child(6) { color: var(--accent-text); }
+.ad-bday {
+  position: relative; aspect-ratio: 1 / 0.82; display: grid; place-items: center; padding: 0;
+  border: 1.5px solid var(--border); border-radius: 12px; background: #fff; color: var(--text);
+  font-family: var(--font-h); font-weight: 600; font-size: 0.95rem; cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s, transform 0.15s;
+}
+.ad-bday:hover:not(:disabled) { border-color: var(--primary); transform: translateY(-1px); }
+.ad-bday.is-today::after { content: ""; position: absolute; bottom: 6px; width: 5px; height: 5px; border-radius: 50%; background: var(--primary); }
+.ad-bday.is-past { background: transparent; border-color: transparent; color: #cbbcc1; cursor: default; }
+.ad-bday.is-new { background: var(--accent); border-color: var(--accent); color: #fff; box-shadow: 0 6px 14px rgba(243, 146, 0, 0.35); }
+.ad-bday.is-blocked { background: var(--primary); border-color: var(--primary); color: #fff; }
+.ad-bday.is-blocked span, .ad-bday.is-all span { text-decoration: line-through; }
+.ad-bday.is-remove { background: #fff; border: 2px dashed var(--primary); color: var(--primary); }
+.ad-bday.is-all { background: #5c0a26; border-color: #5c0a26; color: #fff; opacity: 0.75; cursor: not-allowed; }
+.ad-bday.is-today.is-new::after, .ad-bday.is-today.is-blocked::after { background: #fff; }
+.ad-bcal-legend { display: flex; flex-wrap: wrap; gap: 0.4rem 1rem; margin: 0.9rem 0 0.4rem; font-size: 0.78rem; color: var(--muted); }
+.ad-bcal-legend span { display: inline-flex; align-items: center; gap: 0.35rem; }
+.ad-bcal-legend i { width: 14px; height: 14px; border-radius: 4px; border: 1.5px solid var(--border); background: #fff; }
+.ad-bcal-legend .lg-new { background: var(--accent); border-color: var(--accent); }
+.ad-bcal-legend .lg-blocked { background: var(--primary); border-color: var(--primary); }
+.ad-bcal-legend .lg-remove { border: 2px dashed var(--primary); }
+.ad-bcal-legend .lg-all { background: #5c0a26; border-color: #5c0a26; opacity: 0.75; }
+.ad-bcal-foot { display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; margin-top: 0.8rem; padding-top: 0.8rem; border-top: 1px solid var(--border); }
+.ad-bcal-foot .ad-muted { flex: 1; font-weight: 600; }
+.ad-bcal-range { margin-top: 0.9rem; }
+.ad-bcal-range summary { cursor: pointer; font-size: 0.86rem; font-weight: 600; color: var(--primary); }
+.ad-bcal-range form { margin-top: 0.8rem; align-items: end; }
+.ad-bcal-range .ad-btn { margin-bottom: 0.9rem; justify-self: start; }
+@media (max-width: 720px) {
+  .ad-bcal-week, .ad-bcal-grid { gap: 4px; }
+  .ad-bday { border-radius: 9px; font-size: 0.86rem; aspect-ratio: 1 / 0.95; }
+  .ad-bcal-foot .ad-muted { flex-basis: 100%; }
+}
+
 .ad-block-item { display: flex; align-items: center; justify-content: space-between; gap: 0.8rem; flex-wrap: wrap; }
 .ad-block-item > div { display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; }
 
@@ -199,6 +245,9 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .ad-log-when { color: var(--muted); }
 .ad-log-who { font-weight: 600; word-break: break-all; }
 .ad-log-what small { display: block; color: var(--muted); font-size: 0.78rem; }
+.ad-log-changes { margin: 0.3rem 0 0; padding-left: 1.1rem; color: var(--muted); font-size: 0.82rem; }
+.ad-log-changes li { margin: 0.1rem 0; }
+.ad-more { display: flex; align-items: center; justify-content: center; gap: 1rem; flex-wrap: wrap; padding: 0.4rem 0 0.2rem; }
 
 /* ---------- Dialog (add booking) ---------- */
 .ad-dialog { width: min(640px, calc(100% - 1.5rem)); max-height: calc(100% - 1.5rem); margin: auto; padding: 0; border: 0; border-radius: 20px; background: transparent; }

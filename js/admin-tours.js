@@ -198,6 +198,7 @@
     box.appendChild(vis);
 
     box.appendChild(basicsSection());
+    box.appendChild(cardsSection());
     box.appendChild(pricesSection());
     box.appendChild(includedSection());
     box.appendChild(timelineSection());
@@ -246,6 +247,24 @@
     g.appendChild(field("Pickup card title", "pickupCard.title", { placeholder: "Free Pickup in Dubai" }));
     g.appendChild(field("Pickup card text", "pickupCard.text"));
     body.appendChild(g);
+    return d;
+  }
+
+  // Text used OUTSIDE the tour page: the tour cards (Home + Tours pages) and, for the tours that
+  // have one, the big feature box on the Home page
+  function cardsSection() {
+    const { d, body } = section("Cards and home page", "Short text on the tour cards, and the Home page feature box");
+    const g = el("div", "ad-form-grid");
+    g.appendChild(field("Short text on the tour cards", "cardText", { textarea: true, wide: true, rows: 2, help: "One or two lines. The cards also show the name, the tour type, the first 3 highlights and the price." }));
+    body.appendChild(g);
+    if (draft.spotlight || current.slug === "abu-dhabi" || current.slug === "desert-safari") {
+      body.appendChild(el("h4", "ad-te-sub", "Home page feature box"));
+      const g2 = el("div", "ad-form-grid");
+      g2.appendChild(field("Tagline", "spotlight.tagline", { wide: true, placeholder: "The UAE's Most Complete Day Trip" }));
+      g2.appendChild(field("Text", "spotlight.desc", { textarea: true, wide: true, rows: 3 }));
+      g2.appendChild(linesField("List in the feature box", "spotlight.list", "One per line (6 fit best)."));
+      body.appendChild(g2);
+    }
     return d;
   }
 

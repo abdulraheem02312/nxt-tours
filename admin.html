@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/admin.css?v=20261005q" />
+  <link rel="stylesheet" href="css/admin.css?v=20261005t" />
 </head>
 <body>
 
@@ -173,25 +173,50 @@
             <p class="ad-muted">Days a tour is not running (holiday, fully booked, weather). Customers can't pick these days on the website.</p>
           </div>
         </div>
-        <form class="ad-card ad-add" data-block-form novalidate>
-          <h3>Block a date</h3>
+        <!-- Calendar: tap any days to block them, tap a red day to unblock it, then Save -->
+        <div class="ad-card ad-bcal">
           <div class="ad-form-grid">
-            <label class="ad-field">From
-              <input type="date" required data-block-from />
-            </label>
-            <label class="ad-field">To (optional, for several days in a row)
-              <input type="date" data-block-to />
-            </label>
             <label class="ad-field">Tour
               <select data-block-tour></select>
             </label>
             <label class="ad-field">Reason (only the team sees this)
-              <input type="text" maxlength="200" placeholder="e.g. Fully booked" data-block-note />
+              <input type="text" maxlength="200" placeholder="e.g. Fully booked, Eid holiday" data-block-note />
             </label>
           </div>
+          <div class="ad-bcal-head">
+            <button type="button" class="ad-icon-btn" data-bcal-prev aria-label="Previous month">‹</button>
+            <strong data-bcal-month></strong>
+            <button type="button" class="ad-icon-btn" data-bcal-next aria-label="Next month">›</button>
+          </div>
+          <div class="ad-bcal-week" aria-hidden="true"><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span></div>
+          <div class="ad-bcal-grid" data-bcal-grid></div>
+          <div class="ad-bcal-legend">
+            <span><i class="lg-free"></i>Open</span>
+            <span><i class="lg-new"></i>Will be blocked</span>
+            <span><i class="lg-blocked"></i>Blocked</span>
+            <span><i class="lg-remove"></i>Will be unblocked</span>
+            <span><i class="lg-all"></i>Blocked for all tours</span>
+          </div>
           <p class="ad-error" data-block-error hidden></p>
-          <button type="submit" class="ad-btn ad-btn-primary">Block</button>
-        </form>
+          <div class="ad-bcal-foot">
+            <span class="ad-muted" data-bcal-summary>Tap the days you want to block.</span>
+            <button type="button" class="ad-btn ad-btn-ghost ad-btn-sm" data-bcal-clear>Clear</button>
+            <button type="button" class="ad-btn ad-btn-primary" data-bcal-save>Save</button>
+          </div>
+          <details class="ad-bcal-range">
+            <summary>Block a long stretch (from - to)</summary>
+            <form class="ad-form-grid" data-block-form novalidate>
+              <label class="ad-field">From
+                <input type="date" required data-block-from />
+              </label>
+              <label class="ad-field">To
+                <input type="date" data-block-to />
+              </label>
+              <button type="submit" class="ad-btn ad-btn-ghost ad-btn-sm">Block these days</button>
+            </form>
+          </details>
+        </div>
+        <h3 class="ad-section-title">Upcoming blocked days</h3>
         <div class="ad-list" data-block-list></div>
       </section>
 
@@ -252,9 +277,23 @@
         <div class="ad-panel-head">
           <div>
             <h2>Activity</h2>
-            <p class="ad-muted">Who changed what, newest first (last 300 changes).</p>
+            <p class="ad-muted">Who changed what, newest first. Keeps the last 2,000 changes.</p>
           </div>
           <button type="button" class="ad-btn ad-btn-ghost" data-activity-refresh>Refresh</button>
+        </div>
+        <div class="ad-toolbar">
+          <select class="ad-select" data-activity-who aria-label="Filter by person">
+            <option value="">Everyone</option>
+          </select>
+          <select class="ad-select" data-activity-kind aria-label="Filter by kind of change">
+            <option value="">All changes</option>
+            <option value="tours">Tours</option>
+            <option value="bookings">Bookings</option>
+            <option value="reviews">Reviews</option>
+            <option value="dates">Blocked dates</option>
+            <option value="settings">Settings</option>
+            <option value="team">Team</option>
+          </select>
         </div>
         <div class="ad-list" data-activity-list></div>
       </section>
@@ -377,8 +416,8 @@
   <div class="ad-toast" data-toast role="status" aria-live="polite" hidden></div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-  <script src="js/config.js?v=20261005q"></script>
-  <script src="js/admin.js?v=20261005q"></script>
-  <script src="js/admin-tours.js?v=20261005q"></script>
+  <script src="js/config.js?v=20261005t"></script>
+  <script src="js/admin.js?v=20261005t"></script>
+  <script src="js/admin-tours.js?v=20261005t"></script>
 </body>
 </html>
