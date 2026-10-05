@@ -117,6 +117,7 @@ export function customerEmail(b: Booking, cfg: EmailConfig) {
           <li>Our team checks your date and pickup point.</li>
           <li>We message you on WhatsApp to confirm.</li>
           <li>On the day, be ready at your pickup point at the start of your time window.</li>
+          <li>Pay cash on pickup. Nothing to pay online.</li>
         </ol>
       </td></tr>
       <tr><td align="center" style="padding:24px 32px 8px;">
@@ -139,6 +140,7 @@ export function customerEmail(b: Booking, cfg: EmailConfig) {
     b.persons ? `Persons: ${b.persons}` : "",
     "",
     "Our team will contact you on WhatsApp shortly to confirm.",
+    "Pay cash on pickup. Nothing to pay online.",
     `Questions? WhatsApp us: ${waLink}`,
   ].filter(Boolean).join("\n");
   return { subject, html: shell(cfg, `Your reference is ${b.ref}. We'll confirm on WhatsApp shortly.`, body), text };

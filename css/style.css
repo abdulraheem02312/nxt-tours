@@ -7565,7 +7565,8 @@ button.btn {
 /* Opening / closing slide (script.js sets the height); the arrow turns back as soon as it starts closing */
 .tl-pickup-body {
   overflow: hidden;
-  transition: height 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+  /* opening: starts slowly and eases in and out (it felt too quick at the start) */
+  transition: height 0.75s cubic-bezier(0.45, 0, 0.25, 1);
 }
 
 .tl-pickup.is-closing summary::after {
@@ -7575,7 +7576,7 @@ button.btn {
 /* The rows fade and slide in one after another while it opens */
 .tl-pickup[open]:not(.is-closing) .tl-pickup-note,
 .tl-pickup[open]:not(.is-closing) tbody tr {
-  animation: pickup-row-in 0.45s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  animation: pickup-row-in 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) both;
 }
 
 .tl-pickup[open]:not(.is-closing) tbody tr:nth-child(n + 2) { animation-delay: 0.04s; }
@@ -7705,6 +7706,19 @@ button.btn {
   display: block;
   width: 100%;
   text-align: center;
+  margin-top: 0.4rem;
+}
+
+/* "Pay cash on pickup" under the Book Now button */
+.tour-pay {
+  margin-top: 0.7rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--accent-text);
+  text-align: center;
+}
+
+.tour-pay + .tour-ask {
   margin-top: 0.4rem;
 }
 

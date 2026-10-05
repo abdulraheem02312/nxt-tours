@@ -1038,8 +1038,6 @@ hideTourCards();
     setText(card.querySelector(".tour-type-badge"), tour.type);
     setText(card.querySelector(".tour-body > p"), tour.cardText);
     setList(card.querySelector(".tour-body ul"), (tour.points || []).slice(0, 3));
-    const wa = card.querySelector('a[href*="wa.me/"]');
-    if (wa) wa.href = wa.href.replace(/\?text=.*/, "?text=" + encodeURIComponent("Hello NXT Tours! I'd like to book the " + fullName + "."));
     // Card photo = the tour page's main photo, so both always match
     const img = card.querySelector(".tour-img-wrap img");
     if (img && tour.photos && tour.photos[0]) {
@@ -1130,7 +1128,7 @@ if (document.querySelector(".tour-card[data-tour]")) {
             '<label>Travel date<input type="date" class="tm-date" /></label>' +
             '<label>Guests<input type="number" class="tm-guests" min="1" max="60" placeholder="e.g. 4" /></label>' +
           '</div>' +
-          '<a class="btn btn-solid tm-wa" target="_blank" rel="noopener">Book on WhatsApp</a>' +
+          '<a class="btn btn-solid tm-wa">Book Now</a>' +
         '</div>' +
       '</div>' +
     '</div>';
@@ -1166,12 +1164,12 @@ if (document.querySelector(".tour-card[data-tour]")) {
     thumbBtns.forEach((b, n) => b.classList.toggle("is-active", n === photoIndex));
   };
 
-  // ---- WhatsApp button: message is rebuilt whenever date / guests change ----
+  // ---- Book Now: opens the tour page with its booking form ready, passing the date and guests ----
   const updateWhatsApp = () => {
-    const lines = ["Hello NXT Tours!", "I'd like to book the " + tour.name + " " + tour.accent + " (" + money(tour.price) + ")."];
-    if (dateEl.value) lines.push("Travel date: " + dateEl.value);
-    if (guestsEl.value) lines.push("Guests: " + guestsEl.value);
-    waEl.href = "https://wa.me/" + WHATSAPP_NUMBER + "?text=" + encodeURIComponent(lines.join("\n"));
+    const params = new URLSearchParams({ t: slug });
+    if (dateEl.value) params.set("date", dateEl.value);
+    if (guestsEl.value) params.set("guests", guestsEl.value);
+    waEl.href = "tour.html?" + params.toString() + "#book";
   };
   dateEl.addEventListener("input", updateWhatsApp);
   guestsEl.addEventListener("input", updateWhatsApp);
@@ -1441,7 +1439,7 @@ if (document.querySelector(".tour-card[data-tour]")) {
 // =========================================================
 // Hover sparks
 // While the mouse is over a button (.btn-solid, .btn-accent, .btn-outline-dark
-// or the nav "Book on WhatsApp" pill), small orange and crimson sparks fly up off it like
+// or the nav "Book Now" pill), small orange and crimson sparks fly up off it like
 // embers from lava. When the mouse leaves, no new sparks appear, the ones in the
 // air fade out, and the button is back to normal. On a touch screen a tap
 // gives one short burst instead (there is no hover on a phone).
@@ -2124,7 +2122,7 @@ if (tourPage) {
           };
           pkBody.addEventListener("transitionend", done);
           // If the browser skips the animation (tab in the background), finish anyway
-          safety = setTimeout(() => done({ target: pkBody, propertyName: "height" }), 800);
+          safety = setTimeout(() => done({ target: pkBody, propertyName: "height" }), 1100);
           if (det.open) {
             det.classList.add("is-closing");
             pkBody.style.height = pkBody.scrollHeight + "px";
@@ -2531,7 +2529,7 @@ if (tourPage) {
     });
 
     // ---- Booking form: name, mobile (optional), tour option, date, pickup, persons (sharing only).
-    // "Book on WhatsApp" opens one ready-made message with all of it; nothing is stored anywhere. ----
+    // "Book Now" saves it through the backend (create-booking); WhatsApp is only the fallback. ----
     const nameEl = q("[data-tour-name]");
     const emailEl = q("[data-tour-email]");
     const trapEl = q("[data-tour-trap]");
@@ -3038,6 +3036,35 @@ if (tourPage) {
       syncBar();
       fitSticky();
     });
+
+    // "Book Now" from the menu, the box at the end of the page, or a link ending in #book:
+    // phones get the pop-up form, laptops scroll to the booking card and put the cursor in "Your name"
+    const openBooking = () => {
+      if (phoneBook.matches) return openSheet();
+      side.scrollIntoView({ behavior: noMotion ? "auto" : "smooth", block: "start" });
+      setTimeout(() => nameEl.focus({ preventScroll: true }), noMotion ? 0 : 600);
+    };
+    document.querySelectorAll(".nav-cta, [data-open-booking]").forEach((a) => {
+      a.href = "#book";
+      a.addEventListener("click", (e) => {
+        e.preventDefault();
+        openBooking();
+      });
+    });
+    // Date and guests passed from a tour card's pop-up (tour.html?t=...&date=...&guests=...)
+    const passed = new URLSearchParams(location.search);
+    const passedDay = dayBtns.find((b) => b.dataset.date === passed.get("date") && !b.disabled);
+    if (passedDay) {
+      pickDate(passedDay);
+      showDay(passedDay, false);
+      updateMonth();
+    }
+    const passedGuests = Math.round(Number(passed.get("guests")));
+    if (passedGuests >= 1 && passedGuests <= 60) {
+      guestsEl.value = String(passedGuests);
+      guestsEl.dispatchEvent(new Event("input", { bubbles: true }));
+    }
+    if (location.hash === "#book") setTimeout(openBooking, 500);
 
     syncForm();
     updateWhatsApp();
