@@ -2904,6 +2904,75 @@ if (tourPage) {
       updateMonth();
     });
 
+    // ---- Phones and small tablets (980px and narrower): the booking card is NOT at the bottom of
+    // the page. A bar with the price and "Book Now" stays at the bottom of the screen once the
+    // visitor has scrolled past the photos; it opens the same booking card as a pop-up sheet. ----
+    const phoneBook = window.matchMedia("(max-width: 980px)");
+    const bar = document.createElement("div");
+    bar.className = "book-bar";
+    bar.innerHTML =
+      '<div class="book-bar-price"><small></small><strong></strong></div>' +
+      '<button type="button" class="btn btn-solid book-bar-btn">Book Now</button>';
+    bar.querySelector("small").textContent = privateOnly ? "Private tour from" : "Sharing tour from";
+    bar.querySelector("strong").textContent = money(tour.price) + (privateOnly ? "" : " / person");
+    document.body.appendChild(bar);
+
+    const sheetHead = document.createElement("div");
+    sheetHead.className = "book-sheet-head";
+    sheetHead.innerHTML =
+      '<span class="book-sheet-grip" aria-hidden="true"></span><strong>Book your tour</strong>' +
+      '<button type="button" class="book-sheet-close" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>';
+    side.prepend(sheetHead);
+    const backdrop = document.createElement("div");
+    backdrop.className = "book-sheet-backdrop";
+    document.body.appendChild(backdrop);
+
+    let pastPhotos = false;
+    const syncBar = () => {
+      const show = phoneBook.matches && pastPhotos && !side.classList.contains("is-open");
+      bar.classList.toggle("is-shown", show);
+      document.body.classList.toggle("has-book-bar", show);
+    };
+    const openSheet = () => {
+      side.classList.add("is-open");
+      backdrop.classList.add("is-open");
+      document.body.classList.add("sheet-open");
+      side.scrollTop = 0;
+      syncBar();
+      requestAnimationFrame(updateMonth); // the date row was hidden, re-measure it
+    };
+    const closeSheet = () => {
+      side.classList.remove("is-open");
+      backdrop.classList.remove("is-open");
+      document.body.classList.remove("sheet-open");
+      syncBar();
+    };
+    bar.querySelector("button").addEventListener("click", openSheet);
+    sheetHead.querySelector(".book-sheet-close").addEventListener("click", closeSheet);
+    backdrop.addEventListener("click", closeSheet);
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && side.classList.contains("is-open") && !document.querySelector("dialog[open]")) closeSheet();
+    });
+    // Swipe the top of the sheet down to close it
+    let sheetY = null;
+    sheetHead.addEventListener("touchstart", (e) => (sheetY = e.touches[0].clientY), { passive: true });
+    sheetHead.addEventListener("touchend", (e) => {
+      if (sheetY !== null && e.changedTouches[0].clientY - sheetY > 60) closeSheet();
+      sheetY = null;
+    });
+    // After a booking is sent, the "request received" popup closes the sheet behind it too
+    doneDialog.addEventListener("close", closeSheet);
+    // The bar appears once the photos have scrolled up out of view
+    new IntersectionObserver(([e]) => {
+      pastPhotos = !e.isIntersecting && e.boundingClientRect.top < 0;
+      syncBar();
+    }).observe(swipe);
+    phoneBook.addEventListener("change", () => {
+      if (!phoneBook.matches) closeSheet();
+      syncBar();
+      fitSticky();
+    });
+
     syncForm();
     updateWhatsApp();
     fitSticky();
