@@ -1936,6 +1936,7 @@ if (tourPage) {
     const swTrack = swipe.querySelector(".tour-swipe-track");
     const swCount = swipe.querySelector(".tour-swipe-count");
     const swDots = swipe.querySelector(".tour-swipe-dots");
+    let dragEndedAt = 0; // set when a mouse drag ends, so that drag does not open the viewer
     tour.photos.forEach((p, i) => {
       const b = document.createElement("button");
       b.type = "button";
@@ -1947,7 +1948,9 @@ if (tourPage) {
       im.decoding = "async";
       im.style.objectPosition = p.pos || "50% 50%";
       b.appendChild(im);
-      b.addEventListener("click", () => openLightbox(i));
+      b.addEventListener("click", () => {
+        if (Date.now() - dragEndedAt > 300) openLightbox(i);
+      });
       swTrack.appendChild(b);
       swDots.appendChild(document.createElement("span"));
     });
@@ -1961,6 +1964,30 @@ if (tourPage) {
       cancelAnimationFrame(swRaf);
       swRaf = requestAnimationFrame(() => swSet(Math.round(swTrack.scrollLeft / Math.max(1, swTrack.clientWidth))));
     }, { passive: true });
+    // Mouse drag too (phone layouts get checked on computers without touch): drag to move,
+    // let go to settle on the nearest photo. A drag never counts as a tap that opens the viewer.
+    let drag = null;
+    swTrack.addEventListener("pointerdown", (e) => {
+      if (e.pointerType !== "mouse") return;
+      drag = { x: e.clientX, left: swTrack.scrollLeft, moved: false };
+      swTrack.style.scrollSnapType = "none";
+    });
+    window.addEventListener("pointermove", (e) => {
+      if (!drag) return;
+      const dx = e.clientX - drag.x;
+      if (Math.abs(dx) > 6) drag.moved = true;
+      swTrack.scrollLeft = drag.left - dx;
+    });
+    window.addEventListener("pointerup", () => {
+      if (!drag) return;
+      const moved = drag.moved;
+      drag = null;
+      const page = Math.round(swTrack.scrollLeft / swTrack.clientWidth);
+      swTrack.scrollTo({ left: page * swTrack.clientWidth, behavior: "smooth" });
+      setTimeout(() => (swTrack.style.scrollSnapType = ""), 400);
+      if (moved) dragEndedAt = Date.now();
+    });
+    swTrack.addEventListener("dragstart", (e) => e.preventDefault());
     gridEl.after(swipe);
 
     // ---- "Your Day, Hour by Hour": vertical timeline. A crimson line fills as you scroll, each

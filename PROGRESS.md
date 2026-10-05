@@ -2,35 +2,30 @@
 
 Update this file at the end of every work session (newest first).
 
-## Status (2026-10-04)
+## Status (2026-10-05)
 
-### Done
-- **Abu Dhabi tour page** fully built: hour-by-hour animated timeline (pickup 7:30 AM, all stops incl. Emirates Palace, Etihad Towers, Qasr Al Watan), 14 photos, included / not included / important notes, pickup points grouped by area with search.
-- **Prices**: sharing price + separate private prices (7-seater, 14-seater); homepage and tours page read prices and photos from the same `TOURS` data.
-- **Brand colours** matched to the brand guideline across the whole site.
-- **Booking form**: name, email, mobile (optional), tour option, date (swipe row + full calendar, no same-day bookings), pickup picker, persons (sharing only). "Book Now" saves the booking in Supabase and shows a "Booking request received" popup with a reference like `NXT-AD-7K3QF`.
-- **Booking emails**: customer confirmation sends from hello@nxttours.com (Resend, domain verified).
-- **Reviews**: Facebook reviews + reviews written on the website (shown after approval, with stars).
-- **Backend security** tested: public key can't read bookings, can't approve reviews, sign-ups off.
+### Done on 2026-10-05 (on `dev`, NOT live yet, waiting for Abdullah's review)
+- **Website fixes**: tour page photos swipe on phones (1 / 14 counter + dots); home card caption no longer overlaps the dots; hero text readable (dark fade behind it) and the button lines up with the text; nav bar has no background at the top of every page, glass only after scrolling; Facebook logo round and Facebook blue, "98% recommend" opens Facebook in a new tab; About/Contact pickup wording fixed.
+- **Booking cutoff**: tomorrow can't be booked after 6:00 PM Dubai time (setting in the admin panel). Clear orange note under the dates. The server checks it too.
+- **Tour page design**: orange accents next to the crimson; new road timeline (curvy road down the middle on PC with cards left/right, road on the left on phones, red/orange stops, a van that drives as you scroll); "Why Travellers Choose" moved to the end.
+- **Home hero**: 5 new bright daytime photos (Abu Dhabi, Dubai, Desert, Hatta, Khorfakkan) made in ChatGPT, originals in `nxt-tours-assets/hero/`. On phones the arrows are hidden, the photo cards are the picker.
+- **Share preview + Google**: share image `images/og-image.jpg`, Open Graph tags on every page, business data (TravelAgency), `sitemap.xml`, `robots.txt` (admin hidden). Addresses point to github.io for now.
+- **Backend phase 2**: tours now live in the database (`tours` table). The site loads them on every visit and falls back to the built-in `TOURS` in `js/script.js` if the database is slow or down. New tables: `site_settings`, `email_settings`, `blocked_dates`, `tour_versions` (undo), `activity_log`. Photo uploads go to the `tour-photos` storage bucket.
+- **Admin panel phase 2**: Dashboard (counts, next 7 days, pop-up + sound for new bookings), Bookings (add booking by hand, download as Excel/CSV), Tours editor (name, text, prices, private prices, included/notes, timeline, pickup points, photos with auto-shrink, show/hide, history with restore), Blocked dates, Settings (WhatsApp/phone/email, cutoff hour, offer banner, email switches + test email), Activity log. Works on phones.
+- **Emails**: customer booking confirmation stays ON. Team alert, status update (Confirmed/Cancelled), reminder (day before, 10 AM) and review request (day after, 10 AM) are built but OFF. Turn them on in Settings > Emails once the client's mailbox exists. Daily job: pg_cron `nxt-daily-emails`, 06:00 UTC, calls the `notify` function.
+- Everything tested with throwaway logins and test bookings, all deleted afterwards.
 
 ### Waiting on the client
-- Create **hello@nxttours.com** in their Google Workspace (company email is on Google, not cPanel). Then set `TEAM_EMAILS=hello@nxttours.com` so new-booking alerts arrive.
-- Decide when to put the site live on nxttours.com (cPanel hosting, a site is already running there).
-
-- **Admin panel, phase 1** (`admin.html`, not linked from the site): email/password login, Bookings (filter by status, search, sort by travel date, change status, team notes, WhatsApp/email the customer), Reviews (approve, hide, delete), Team (owner adds people with a role and a temporary password, resets passwords, removes people; the last owner can't be removed), Account (change password). New people must set their own password on first login. Tested end to end, including that editors can't make themselves owner.
-
-### First owner login (done 2026-10-05, Abdullah is owner)
-How it was done, for reference:
-1. Supabase > Authentication > Users > Add user > Create new user: your email + a strong password, tick "Auto Confirm User".
-2. Supabase > SQL Editor, run (with your email): `insert into public.admin_users (user_id, role, email) select id, 'owner', email from auth.users where email = 'you@example.com';`
-3. Log in at `/admin.html`. Add everyone else from the Team page.
+- Company mailbox (hello@nxttours.com). The client lost access to Google Workspace; Google admin access can be recovered by domain verification (we control the DNS in cPanel). Then: Settings > Emails, add the address, switch alerts on, press "Send a test alert".
+- OK to merge the duplicate root SPF records on nxttours.com.
+- Team to check the pickup-area grouping (Onpassive/Equiti under Sheikh Zayed Road).
 
 ### Next
-1. Collect more Abu Dhabi reviews from the Facebook page.
-2. About / Contact pages still say "hotel & metro pickup" (hotel pickup is private tours only).
-3. Admin panel phase 2: edit prices, tour text, timeline, photos from the panel.
-4. Other tours (Dubai, Hatta, Desert Safari, Khorfakkan) to the same level as Abu Dhabi.
-6. Move the site to nxttours.com, then make this repo private and switch `SITE_URL` (email logo) to nxttours.com.
+1. Abdullah reviews `dev` (local preview), then merge to `main` to go live.
+2. Move the site to nxttours.com and to Abdullah's own private repo (plan agreed, postponed). Then change the github.io address in the share tags, `sitemap.xml`, `robots.txt` and the `SITE_URL` secret to nxttours.com.
+3. Other tours (Dubai, Hatta, Desert Safari, Khorfakkan) to the Abu Dhabi level: the team can now do this from the admin panel.
+4. Collect more Abu Dhabi reviews from the Facebook page.
 
-### Managing bookings and reviews
-- Use the admin panel at `/admin.html` (after the first owner login exists).
+### Managing the site
+- Everything day to day is in the admin panel at `/admin.html`: bookings, reviews, tours, blocked dates, settings, team.
+- Owner: everything. Editor: bookings, reviews, tours, blocked dates. Reviewer: reviews only.
