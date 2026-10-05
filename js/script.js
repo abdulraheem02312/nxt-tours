@@ -94,6 +94,13 @@ if (yearEl) {
 // The visitor just presses Send there. Nothing is sent until they do.
 const WHATSAPP_NUMBER = "971586272827";
 
+// Settings the team can change in the admin panel. These are the defaults; they are replaced by
+// the saved values when the live data loads (see loadLiveData further down).
+const SITE = {
+  cutoffHour: 18, // tomorrow can be booked until 6 PM Dubai time
+  blocked: [], // [{ date: "2026-12-02", tour_slug: null | "abu-dhabi" }]
+};
+
 // BACKEND (Supabase URL + public key) is defined in js/config.js, loaded before this file.
 // OPTIONAL email copy: put the client's email between the quotes to ALSO get every inquiry
 // by email (sent through the free formsubmit.co service; no account needed, but the client
@@ -2246,9 +2253,20 @@ if (tourPage) {
     const monthEl = q("[data-date-month]");
     const DAYS = 365;
     const iso = (d) => d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
-    const start = new Date();
-    start.setHours(0, 0, 0, 0);
-    start.setDate(start.getDate() + 1);
+    // Dates follow the DUBAI calendar (UTC+4, no daylight saving), wherever the visitor is.
+    // Tomorrow can be booked until the cutoff hour (6 PM by default, set in the admin panel);
+    // after that the earliest day is the day after tomorrow. The server checks the same rule.
+    const dubai = new Date(Date.now() + 4 * 3600e3);
+    const pastCutoff = dubai.getUTCHours() >= SITE.cutoffHour;
+    const start = new Date(dubai.getUTCFullYear(), dubai.getUTCMonth(), dubai.getUTCDate() + (pastCutoff ? 2 : 1));
+    const cutoffText = (SITE.cutoffHour % 12 || 12) + ":00 " + (SITE.cutoffHour < 12 ? "AM" : "PM");
+    const dateNote = q("[data-date-note]");
+    dateNote.textContent = pastCutoff
+      ? "Bookings for tomorrow closed at " + cutoffText + " Dubai time. The earliest date you can book is " +
+        start.toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" }) + "."
+      : "Bookings for tomorrow close at " + cutoffText + " Dubai time today.";
+    // Days the team blocked in the admin panel (holidays, fully booked): for every tour or just this one
+    const blocked = new Set(SITE.blocked.filter((b) => !b.tour_slug || b.tour_slug === slug).map((b) => b.date));
     const last = new Date(start);
     last.setDate(start.getDate() + DAYS - 1);
     const dayBtns = [];
@@ -2262,13 +2280,18 @@ if (tourPage) {
       b.setAttribute("aria-selected", "false");
       b.dataset.date = iso(d);
       b.dataset.month = d.toLocaleDateString("en-GB", { month: "long", year: "numeric" });
-      const top = i === 0 ? "Tmrw" : d.toLocaleDateString("en-GB", { weekday: "short" });
+      const top = i === 0 && !pastCutoff ? "Tmrw" : d.toLocaleDateString("en-GB", { weekday: "short" });
       b.innerHTML = '<span class="date-dow"></span><span class="date-num"></span><span class="date-mon"></span>';
       b.children[0].textContent = top;
       b.children[1].textContent = d.getDate();
       b.children[2].textContent = d.toLocaleDateString("en-GB", { month: "short" });
       b.setAttribute("aria-label", d.toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long", year: "numeric" }));
       if (d.getDay() === 5 || d.getDay() === 6) b.classList.add("is-weekend");
+      if (blocked.has(b.dataset.date)) {
+        b.disabled = true;
+        b.classList.add("is-blocked");
+        b.title = "Not available";
+      }
       b.addEventListener("click", () => pickDate(b));
       track.appendChild(b);
       dayBtns.push(b);
@@ -2298,7 +2321,10 @@ if (tourPage) {
       if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
       e.preventDefault();
       const cur = dayBtns.findIndex((b) => b.classList.contains("is-selected"));
-      const next = Math.min(DAYS - 1, Math.max(0, cur + (e.key === "ArrowRight" ? 1 : -1)));
+      const dir = e.key === "ArrowRight" ? 1 : -1;
+      let next = cur + dir;
+      while (dayBtns[next] && dayBtns[next].disabled) next += dir; // skip blocked days
+      if (!dayBtns[next]) return;
       pickDate(dayBtns[next]);
       showDay(dayBtns[next], true);
     });
@@ -2332,8 +2358,9 @@ if (tourPage) {
         b.textContent = n;
         b.dataset.date = iso(d);
         b.setAttribute("aria-label", d.toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long", year: "numeric" }));
-        if (d < start || d > last) {
+        if (d < start || d > last || blocked.has(b.dataset.date)) {
           b.disabled = true;
+          if (blocked.has(b.dataset.date)) b.classList.add("is-blocked");
         } else {
           if (iso(d) === dateEl.value) b.classList.add("is-selected");
           if (d.getDay() === 5 || d.getDay() === 6) b.classList.add("is-weekend");

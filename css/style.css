@@ -6438,6 +6438,47 @@ button.btn {
   border-color: rgba(170, 19, 69, 0.35);
 }
 
+/* A day the team blocked in the admin panel: struck through, can't be picked */
+.date-day.is-blocked {
+  opacity: 0.4;
+  cursor: not-allowed;
+  border-color: transparent;
+}
+
+.date-day.is-blocked .date-num {
+  text-decoration: line-through;
+}
+
+.cal-day.is-blocked {
+  text-decoration: line-through;
+}
+
+/* "Bookings for tomorrow close at 6:00 PM Dubai time": orange info line under the dates */
+.date-note {
+  display: flex;
+  gap: 0.45rem;
+  align-items: flex-start;
+  margin: 0.55rem 0 0;
+  padding: 0.5rem 0.7rem;
+  border-radius: 10px;
+  background: var(--accent-soft);
+  color: var(--accent-text);
+  font-size: 0.8rem;
+  font-weight: 600;
+  line-height: 1.45;
+}
+
+.date-note::before {
+  content: "";
+  flex: none;
+  width: 15px;
+  height: 15px;
+  margin-top: 0.1rem;
+  background: currentColor;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.4' stroke-linecap='round'%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3Cpath d='M12 7v5l3 3'/%3E%3C/svg%3E") center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.4' stroke-linecap='round'%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3Cpath d='M12 7v5l3 3'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+
 .date-dow {
   font-size: 0.66rem;
   font-weight: 600;
