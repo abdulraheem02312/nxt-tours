@@ -21,10 +21,10 @@ const updateNavbar = () => {
     .find((el) => !navbar.contains(el));
   const isDark = Boolean(under && under.closest(DARK_SECTIONS));
 
-  // Normally the bar stays fully transparent (white text) until you scroll 40px, because every
-  // page opens on a dark hero photo/banner. A page with no dark section at the very top (like
-  // tour.html's plain white header) needs the readable light-glass look from the start instead.
-  navbar.classList.toggle("scrolled", window.scrollY > 40 || !isDark);
+  // At the very top of EVERY page the bar has no background; the glass only appears after 40px
+  // of scrolling. Over a light top (tour.html's white header) the text and logo still turn dark
+  // (that follows .on-dark alone, see style.css), so it stays readable without the glass.
+  navbar.classList.toggle("scrolled", window.scrollY > 40);
   navbar.classList.toggle("on-dark", isDark);
 
   navTicking = false;
@@ -1822,6 +1822,44 @@ if (tourPage) {
       gridEl.appendChild(tile);
     });
 
+    // Phones: the grid is too narrow, so show ALL photos as a swipe row (CSS hides one or the other)
+    // with a "1 / 14" counter and dots. Tapping a photo opens the same full-screen viewer.
+    const swipe = document.createElement("div");
+    swipe.className = "tour-swipe";
+    swipe.innerHTML =
+      '<div class="tour-swipe-track"></div>' +
+      '<span class="tour-swipe-count" aria-hidden="true"></span>' +
+      '<div class="tour-swipe-dots" aria-hidden="true"></div>';
+    const swTrack = swipe.querySelector(".tour-swipe-track");
+    const swCount = swipe.querySelector(".tour-swipe-count");
+    const swDots = swipe.querySelector(".tour-swipe-dots");
+    tour.photos.forEach((p, i) => {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.setAttribute("aria-label", "View photo " + (i + 1) + ": " + p.cap);
+      const im = document.createElement("img");
+      im.src = p.src;
+      im.alt = p.alt || p.cap || "";
+      im.loading = i === 0 ? "eager" : "lazy";
+      im.decoding = "async";
+      im.style.objectPosition = p.pos || "50% 50%";
+      b.appendChild(im);
+      b.addEventListener("click", () => openLightbox(i));
+      swTrack.appendChild(b);
+      swDots.appendChild(document.createElement("span"));
+    });
+    const swSet = (i) => {
+      swCount.textContent = i + 1 + " / " + tour.photos.length;
+      [...swDots.children].forEach((d, k) => d.classList.toggle("is-active", k === i));
+    };
+    swSet(0);
+    let swRaf = 0;
+    swTrack.addEventListener("scroll", () => {
+      cancelAnimationFrame(swRaf);
+      swRaf = requestAnimationFrame(() => swSet(Math.round(swTrack.scrollLeft / Math.max(1, swTrack.clientWidth))));
+    }, { passive: true });
+    gridEl.after(swipe);
+
     // ---- "Your Day, Hour by Hour": vertical timeline. A crimson line fills as you scroll, each
     // dot lights up once you pass it, and each card slides in as it comes into view. ----
     if (tour.timeline && tour.timeline.length) {
@@ -1986,7 +2024,7 @@ if (tourPage) {
     // rest. Facebook has no star ratings, so cards say "Recommends NXT Tours" instead of stars. ----
     const FB_REVIEWS_URL = "https://www.facebook.com/toursnxt/reviews";
     const FB_SCORE = { pct: 98, count: 68 }; // from the Facebook page, 2026-10-04
-    const ICON_FB = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M9.1 23.7v-8H6.6v-3.6h2.5v-1.6c0-4.1 1.8-6 5.9-6 .8 0 2.1.2 2.6.3v3.3h-1.4c-1.4 0-1.9.5-1.9 1.9v2.1h3.3l-.6 3.6h-2.7v8.2C18 23.2 22 18.6 22 13c0-6.1-4.9-11-10-11S2 6.9 2 13c0 5.6 3.9 10.2 9.1 10.7"/></svg>';
+    const ICON_FB = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="12" fill="#1877F2"/><path fill="#fff" d="M16.67 15.47 17.2 12h-3.33V9.75c0-.95.47-1.88 1.95-1.88h1.51V4.92s-1.37-.23-2.69-.23c-2.74 0-4.53 1.66-4.53 4.66V12H7.08v3.47h3.03v8.4a12 12 0 0 0 3.76 0v-8.4z"/></svg>';
     const ICON_THUMB = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 10v11H3V10h4zM7 10l4-8a3 3 0 0 1 3 3v4h5.5a2 2 0 0 1 2 2.3l-1.4 8A2 2 0 0 1 18.1 21H7"/></svg>';
     const tourName = tour.name + " " + tour.accent;
     const good = REVIEWS.filter((r) => !r.mixed);
