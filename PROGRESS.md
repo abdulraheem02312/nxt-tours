@@ -2,6 +2,12 @@
 
 Update this file at the end of every work session (newest first).
 
+## 2026-10-09 (on `dev`, not live yet)
+- Bookings: red Delete button (asks first). Every delete is logged in Activity with the booking details, shown as a red row.
+- One role only: everyone on the team is an admin (stored as `owner`, shown as "Admin"). Role choices removed from the Team page.
+- Blocked days: "Reason for customers" (shown on the website when a customer taps that day) + "Note for the team" (private).
+- Tours page top cards: Abu Dhabi, Khorfakkan (was Desert), Dubai daytime Burj Khalifa (`images/hero/card-*.webp`).
+
 ## LIVE on https://nxttours.com (2026-10-05)
 - GitHub Pages from `main` of this repo, custom domain via the `CNAME` file. DNS in cPanel Zone Editor: 4 A records to GitHub (185.199.108-111.153), www CNAME to abdulraheem02312.github.io. MX/TXT untouched. Old site still in cPanel public_html as a backup. Old A record was 162.241.27.228.
 - cPanel login now: https://cpanel.nxttours.com (nxttours.com:2083 no longer reaches cPanel).

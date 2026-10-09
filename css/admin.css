@@ -245,6 +245,14 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .ad-log-when { color: var(--muted); }
 .ad-log-who { font-weight: 600; word-break: break-all; }
 .ad-log-what small { display: block; color: var(--muted); font-size: 0.78rem; }
+/* Deleted bookings, removed people and other deletions stand out in red */
+.ad-log-row.is-danger { margin: 0 -1.2rem; padding: 0.7rem 1.2rem; background: var(--bad-soft); border-top-color: rgba(192, 57, 43, 0.25); border-left: 4px solid var(--bad); }
+.ad-log-row.is-danger .ad-log-what strong { color: var(--bad); }
+.ad-log-row.is-danger .ad-log-changes { color: #8a2a20; }
+.ad-bk-delete { margin-left: auto; }
+.ad-role-pill { padding: 0.15rem 0.6rem; border-radius: 999px; background: var(--accent-soft); color: var(--accent-text); font-size: 0.76rem; font-weight: 700; }
+.ad-pill-public { padding: 0.12rem 0.55rem; border-radius: 999px; background: var(--primary-soft); color: var(--primary); font-size: 0.74rem; font-weight: 600; }
+.ad-add-row.is-one-role { grid-template-columns: 1fr auto; }
 .ad-log-changes { margin: 0.3rem 0 0; padding-left: 1.1rem; color: var(--muted); font-size: 0.82rem; }
 .ad-log-changes li { margin: 0.1rem 0; }
 .ad-more { display: flex; align-items: center; justify-content: center; gap: 1rem; flex-wrap: wrap; padding: 0.4rem 0 0.2rem; }

@@ -100,7 +100,7 @@ let WHATSAPP_NUMBER = "971586272827"; // replaced by the number saved in the adm
 // the saved values when the live data loads (see loadLiveData further down).
 const SITE = {
   cutoffHour: 18, // tomorrow can be booked until 6 PM Dubai time
-  blocked: [], // [{ date: "2026-12-02", tour_slug: null | "abu-dhabi" }]
+  blocked: [], // [{ date: "2026-12-02", tour_slug: null | "abu-dhabi", public_reason: "Eid holiday" | null }]
 };
 
 // BACKEND (Supabase URL + public key) is defined in js/config.js, loaded before this file.
@@ -917,7 +917,7 @@ async function loadLiveData() {
     const [tours, settings, blocked] = await Promise.all([
       get("tours?select=slug,data,sort&order=sort"),
       get("site_settings?select=cutoff_hour,whatsapp,phone,email,offer_on,offer_text&id=eq.1"),
-      get("blocked_dates?select=date,tour_slug&date=gte." + dubaiToday),
+      get("blocked_dates?select=date,tour_slug,public_reason&date=gte." + dubaiToday),
     ]);
     if (tours.length) {
       const live = new Set(tours.map((t) => t.slug));
@@ -2565,6 +2565,21 @@ if (tourPage) {
       : "Bookings for tomorrow close at " + cutoffText + " Dubai time today.";
     // Days the team blocked in the admin panel (holidays, fully booked): for every tour or just this one
     const blocked = new Set(SITE.blocked.filter((b) => !b.tour_slug || b.tour_slug === slug).map((b) => b.date));
+    // The reason customers see when they tap a blocked day (optional, set in the admin panel)
+    const blockedReason = new Map();
+    SITE.blocked.filter((b) => !b.tour_slug || b.tour_slug === slug).forEach((b) => {
+      if (b.public_reason || !blockedReason.has(b.date)) blockedReason.set(b.date, b.public_reason || "");
+    });
+    const blockedText = (date) => {
+      const day = new Date(date + "T00:00:00").toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" });
+      const why = blockedReason.get(date);
+      return day + " is not available" + (why ? ": " + why : "") + ". Please choose another day.";
+    };
+    const blockedNote = q("[data-date-blocked]");
+    const showBlocked = (date) => {
+      blockedNote.textContent = blockedText(date);
+      blockedNote.hidden = false;
+    };
     const last = new Date(start);
     last.setDate(start.getDate() + DAYS - 1);
     const dayBtns = [];
@@ -2586,11 +2601,11 @@ if (tourPage) {
       b.setAttribute("aria-label", d.toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long", year: "numeric" }));
       if (d.getDay() === 5 || d.getDay() === 6) b.classList.add("is-weekend");
       if (blocked.has(b.dataset.date)) {
-        b.disabled = true;
         b.classList.add("is-blocked");
-        b.title = "Not available";
+        b.setAttribute("aria-disabled", "true");
+        b.title = blockedText(b.dataset.date);
       }
-      b.addEventListener("click", () => pickDate(b));
+      b.addEventListener("click", () => (b.classList.contains("is-blocked") ? showBlocked(b.dataset.date) : pickDate(b)));
       track.appendChild(b);
       dayBtns.push(b);
     }
@@ -2600,6 +2615,7 @@ if (tourPage) {
         x.setAttribute("aria-selected", x === b ? "true" : "false");
       });
       dateEl.value = b.dataset.date;
+      blockedNote.hidden = true;
       q("[data-date-strip]").classList.remove("is-invalid");
       onChange();
     };
@@ -2621,7 +2637,7 @@ if (tourPage) {
       const cur = dayBtns.findIndex((b) => b.classList.contains("is-selected"));
       const dir = e.key === "ArrowRight" ? 1 : -1;
       let next = cur + dir;
-      while (dayBtns[next] && dayBtns[next].disabled) next += dir; // skip blocked days
+      while (dayBtns[next] && dayBtns[next].classList.contains("is-blocked")) next += dir; // skip blocked days
       if (!dayBtns[next]) return;
       pickDate(dayBtns[next]);
       showDay(dayBtns[next], true);
@@ -2656,9 +2672,16 @@ if (tourPage) {
         b.textContent = n;
         b.dataset.date = iso(d);
         b.setAttribute("aria-label", d.toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long", year: "numeric" }));
-        if (d < start || d > last || blocked.has(b.dataset.date)) {
+        if (d < start || d > last) {
           b.disabled = true;
-          if (blocked.has(b.dataset.date)) b.classList.add("is-blocked");
+        } else if (blocked.has(b.dataset.date)) {
+          b.classList.add("is-blocked");
+          b.setAttribute("aria-disabled", "true");
+          b.title = blockedText(b.dataset.date);
+          b.addEventListener("click", () => {
+            calPicked.textContent = blockedText(b.dataset.date);
+            calPicked.classList.add("is-blocked-msg");
+          });
         } else {
           if (iso(d) === dateEl.value) b.classList.add("is-selected");
           if (d.getDay() === 5 || d.getDay() === 6) b.classList.add("is-weekend");
@@ -2676,6 +2699,7 @@ if (tourPage) {
       calPrev.disabled = calView <= new Date(start.getFullYear(), start.getMonth(), 1);
       calNext.disabled = calView >= new Date(last.getFullYear(), last.getMonth(), 1);
       calPicked.textContent = dateEl.value ? "Selected: " + niceDate(dateEl.value) : "";
+      calPicked.classList.remove("is-blocked-msg");
     };
 
     q("[data-cal-open]").addEventListener("click", () => {
@@ -3053,7 +3077,7 @@ if (tourPage) {
     });
     // Date and guests passed from a tour card's pop-up (tour.html?t=...&date=...&guests=...)
     const passed = new URLSearchParams(location.search);
-    const passedDay = dayBtns.find((b) => b.dataset.date === passed.get("date") && !b.disabled);
+    const passedDay = dayBtns.find((b) => b.dataset.date === passed.get("date") && !b.classList.contains("is-blocked"));
     if (passedDay) {
       pickDate(passedDay);
       showDay(passedDay, false);

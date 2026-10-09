@@ -121,8 +121,9 @@
   async function openApp() {
     show("app");
     $("[data-me-email]").textContent = me.email;
-    $("[data-me-role]").textContent = me.role;
-    $("[data-account-who]").textContent = "Logged in as " + me.email + " (" + me.role + ")";
+    // One role for the whole team (stored as "owner" in the database, shown as "Admin")
+    $("[data-me-role]").textContent = "Admin";
+    $("[data-account-who]").textContent = "Logged in as " + me.email + " (admin)";
     const tabs = $$("[data-tab]");
     tabs.forEach((t) => (t.hidden = !t.dataset.roles.split(" ").includes(me.role)));
     const first = tabs.find((t) => !t.hidden);
@@ -366,6 +367,21 @@
       mail.href = "mailto:" + b.customer_email + "?subject=" + encodeURIComponent("Your NXT Tours booking " + b.ref);
       actions.appendChild(mail);
     }
+    // Delete for good (test bookings, spam). The Activity log keeps a red line with the details.
+    const del = el("button", "ad-btn ad-btn-danger ad-btn-sm ad-bk-delete", "Delete");
+    del.type = "button";
+    del.addEventListener("click", async () => {
+      if (!confirm("Delete booking " + b.ref + " for " + b.customer_name + "?\n\nIt will be removed for good and can't be brought back. The Activity log keeps a record of it.")) return;
+      const { error } = await sb.from("bookings").delete().eq("id", b.id);
+      if (error) return toast("Could not delete, please try again", true);
+      bookings = bookings.filter((x) => x.id !== b.id);
+      if (knownBookingIds) knownBookingIds.delete(b.id);
+      toast("Booking " + b.ref + " deleted");
+      updateTitle();
+      renderBookings();
+      if (!$("[data-panel=home]").hidden) renderHome();
+    });
+    actions.appendChild(del);
     card.appendChild(actions);
 
     const row = el("div", "ad-notes-row");
@@ -717,7 +733,7 @@
         b.title = "Blocked for all tours" + (all.note ? ": " + all.note : "") + '. Choose "All tours" to change it.';
       } else if (own) {
         b.classList.add(toUnblock.has(own.id) ? "is-remove" : "is-blocked");
-        b.title = (own.note ? own.note + ". " : "") + "Tap to unblock";
+        b.title = [own.public_reason && "Customers see: " + own.public_reason, own.note && "Team: " + own.note, "Tap to unblock"].filter(Boolean).join(". ");
         b.addEventListener("click", () => {
           toUnblock.has(own.id) ? toUnblock.delete(own.id) : toUnblock.add(own.id);
           renderBcal();
@@ -756,7 +772,8 @@
       who.appendChild(el("strong", null, fmtDate(b.date)));
       const t = tours.find((x) => x.slug === b.tour_slug);
       who.appendChild(el("span", "ad-pill-wait", t ? tourLabel(t) : "All tours"));
-      if (b.note) who.appendChild(el("span", "ad-muted", b.note));
+      if (b.public_reason) who.appendChild(el("span", "ad-pill-public", "Customers see: " + b.public_reason));
+      if (b.note) who.appendChild(el("span", "ad-muted", "Team: " + b.note));
       card.appendChild(who);
       const del = el("button", "ad-btn ad-btn-ghost ad-btn-sm", "Unblock");
       del.type = "button";
@@ -796,9 +813,10 @@
     setError("[data-block-error]", "");
     const tour = bcalTour();
     const note = $("[data-block-note]").value.trim() || null;
+    const publicReason = $("[data-block-public]").value.trim() || null;
     let ok = true;
     if (toBlock.size) {
-      const { error } = await sb.from("blocked_dates").insert([...toBlock].sort().map((date) => ({ date, tour_slug: tour, note })));
+      const { error } = await sb.from("blocked_dates").insert([...toBlock].sort().map((date) => ({ date, tour_slug: tour, note, public_reason: publicReason })));
       if (error) ok = false;
     }
     if (ok && toUnblock.size) {
@@ -823,6 +841,7 @@
     const to = $("[data-block-to]").value || from;
     const tour = bcalTour();
     const note = $("[data-block-note]").value.trim() || null;
+    const publicReason = $("[data-block-public]").value.trim() || null;
     if (!from) return setError("[data-block-error]", "Please choose the first day.");
     if (to < from) return setError("[data-block-error]", "The 'To' day is before the 'From' day.");
     const days = [];
@@ -830,7 +849,7 @@
     if (days.length > 92) return setError("[data-block-error]", "Please block at most 3 months at a time.");
     setError("[data-block-error]", "");
     const taken = new Set(blockedRows.filter((x) => x.tour_slug === tour).map((x) => x.date));
-    const rows = days.filter((d) => !taken.has(d)).map((date) => ({ date, tour_slug: tour, note }));
+    const rows = days.filter((d) => !taken.has(d)).map((date) => ({ date, tour_slug: tour, note, public_reason: publicReason }));
     if (!rows.length) return toast("Already blocked");
     const { error } = await sb.from("blocked_dates").insert(rows);
     if (error) return setError("[data-block-error]", "Could not save. Please try again.");
@@ -966,7 +985,7 @@
     }
     const table = el("div", "ad-card ad-log");
     list.slice(0, activityShown).forEach((a) => {
-      const r = el("div", "ad-log-row");
+      const r = el("div", "ad-log-row" + (/^(Deleted|Removed)/.test(a.action) ? " is-danger" : ""));
       r.appendChild(el("span", "ad-log-when", fmtTime(a.at)));
       r.appendChild(el("span", "ad-log-who", a.actor));
       const what = el("span", "ad-log-what");
@@ -1048,26 +1067,7 @@
       who.appendChild(el("small", null, "Added " + fmtTime(m.created_at)));
       card.appendChild(who);
 
-      const sel = el("select", "ad-select");
-      sel.setAttribute("aria-label", "Role for " + (m.email || "member"));
-      ["owner", "editor", "reviewer"].forEach((r) => {
-        const o = el("option", null, r.charAt(0).toUpperCase() + r.slice(1));
-        o.value = r;
-        if (r === m.role) o.selected = true;
-        sel.appendChild(o);
-      });
-      sel.addEventListener("change", async () => {
-        try {
-          const data = await callTeam({ action: "role", userId: m.user_id, role: sel.value });
-          toast("Role updated");
-          if (m.user_id === me.id && sel.value !== "owner") return location.reload();
-          renderTeam(data.team);
-        } catch (err) {
-          toast(err.message, true);
-          sel.value = m.role;
-        }
-      });
-      card.appendChild(sel);
+      card.appendChild(el("span", "ad-role-pill", "Admin"));
 
       if (m.user_id !== me.id) {
         const reset = el("button", "ad-btn ad-btn-ghost ad-btn-sm", "Reset password");
@@ -1104,7 +1104,7 @@
     e.preventDefault();
     const btn = e.submitter || $("[data-team-add] button");
     const email = $("[data-team-email]").value.trim();
-    const role = $("[data-team-role]").value;
+    const role = "owner"; // one role: everyone is an admin
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) return setError("[data-team-error]", "Please enter a valid email.");
     setError("[data-team-error]", "");
     btn.disabled = true;

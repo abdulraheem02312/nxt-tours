@@ -6479,7 +6479,28 @@ button.btn {
 }
 
 .cal-day.is-blocked {
+  background: transparent;
+  color: #cbbcc0;
   text-decoration: line-through;
+  cursor: help;
+}
+
+/* "Wed 15 Oct is not available: Eid holiday" when a customer taps a blocked day */
+.date-blocked-note {
+  margin: 0.45rem 0 0;
+  padding: 0.5rem 0.7rem;
+  border-radius: 10px;
+  background: var(--primary-soft);
+  color: var(--primary);
+  font-size: 0.8rem;
+  font-weight: 600;
+  line-height: 1.45;
+}
+
+.cal-picked.is-blocked-msg,
+[data-cal-picked].is-blocked-msg {
+  color: var(--primary);
+  font-weight: 600;
 }
 
 /* "Bookings for tomorrow close at 6:00 PM Dubai time": orange info line under the dates */

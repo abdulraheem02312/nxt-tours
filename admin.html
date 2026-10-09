@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/admin.css?v=20261005x" />
+  <link rel="stylesheet" href="css/admin.css?v=20261009a" />
 </head>
 <body>
 
@@ -179,8 +179,11 @@
             <label class="ad-field">Tour
               <select data-block-tour></select>
             </label>
-            <label class="ad-field">Reason (only the team sees this)
-              <input type="text" maxlength="200" placeholder="e.g. Fully booked, Eid holiday" data-block-note />
+            <label class="ad-field">Reason for customers (optional, shown on the website)
+              <input type="text" maxlength="120" placeholder="e.g. Eid holiday, Fully booked" data-block-public />
+            </label>
+            <label class="ad-field ad-span-2">Note for the team (optional, only the team sees it)
+              <input type="text" maxlength="200" placeholder="e.g. Big group from the hotel" data-block-note />
             </label>
           </div>
           <div class="ad-bcal-head">
@@ -303,26 +306,14 @@
         <div class="ad-panel-head">
           <div>
             <h2>Team</h2>
-            <p class="ad-muted">Who can log in to this panel, and what they can do.</p>
+            <p class="ad-muted">Who can log in to this panel. Everyone on the team is an admin with full access.</p>
           </div>
-        </div>
-        <div class="ad-roles-help">
-          <p><strong>Owner:</strong> everything, including settings and adding or removing people.</p>
-          <p><strong>Editor:</strong> bookings, reviews, tours and blocked dates.</p>
-          <p><strong>Reviewer:</strong> reviews only.</p>
         </div>
         <form class="ad-card ad-add" data-team-add novalidate>
           <h3>Add a person</h3>
-          <div class="ad-add-row">
+          <div class="ad-add-row is-one-role">
             <label class="ad-field">Email
               <input type="email" placeholder="name@example.com" required data-team-email />
-            </label>
-            <label class="ad-field">Role
-              <select required data-team-role>
-                <option value="editor">Editor</option>
-                <option value="reviewer">Reviewer</option>
-                <option value="owner">Owner</option>
-              </select>
             </label>
             <button type="submit" class="ad-btn ad-btn-primary">Add</button>
           </div>
@@ -416,8 +407,8 @@
   <div class="ad-toast" data-toast role="status" aria-live="polite" hidden></div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-  <script src="js/config.js?v=20261005x"></script>
-  <script src="js/admin.js?v=20261005x"></script>
-  <script src="js/admin-tours.js?v=20261005x"></script>
+  <script src="js/config.js?v=20261009a"></script>
+  <script src="js/admin.js?v=20261009a"></script>
+  <script src="js/admin-tours.js?v=20261009a"></script>
 </body>
 </html>
